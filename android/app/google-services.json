@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "152408515642",
+    "project_id": "cskm-parents",
+    "storage_bucket": "cskm-parents.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:152408515642:android:a0343fdcd0dffbedc2c103",
+        "android_client_info": {
+          "package_name": "cskm.com.cskmparents"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBdd07iylu9NvYosnEZ0zPyF6mGlHB5wwg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
