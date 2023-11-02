@@ -49,7 +49,7 @@ dependencies:
   intl: ^0.18.1
   fluttertoast: ^8.2.2
   webview_flutter: ^4.4.1
-  connectivity_plus: ^5.0.1
+  connectivity_plus: ^4.0.2
   url_launcher: ^6.2.1
   file_picker: ^6.0.0
   image_picker: ^1.0.4
