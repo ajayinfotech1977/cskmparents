@@ -2,37 +2,15 @@ workflows:
   ios-workflow:
     name: iOS Build and Deploy
     max_build_duration: 120
-    # integrations:
-    #   app_store_connect: cskmapps
-  # ios-method-1:
-  #   name: ios signing methos-1 workflows
-  #   environment:
-  #     ios_signing:
-  #       distribution_type: app_store
-  #       bundle_identifier: cskm.com.cskmemp
-  #   scripts:
-  #     - script: keychain initialize
-  #     - script: keychain add-certificates
-
-  #     - script: xcode-project use-profiles
-  #     - script: flutter packages pub get
-  #     - name: Flutter build ipa and automatic versioning
-  #       script: /
-  #         flutter build ipa --export-options-plist=/Users/builder/export_options.plist
-  #   artifacts:
-  #     - build/ios/ipa/*.ipa
-  #   publishing:
-  #     email:
-  #       recipients:
-  #         - sssoft2023@gmail.com
-  # ios-method-2:
-  #   name: ios signing methos-2 workflow
+    
     environment:
       ios_signing:
         provisioning_profiles:
-          - distribution_profile_cskmparents
+          - development_profile_cskmparents
+          #- distribution_profile_cskmparents
         certificates:
-          - production_certificate
+          - development_certificate
+          #- production_certificate
     integrations:
       app_store_connect: APIKeyAdminAccess
     scripts:
@@ -45,36 +23,7 @@ workflows:
     publishing:
       app_store_connect:
         auth: integration
-        submit_to_app_store: true
+        submit_to_app_store: false #true
       email:
         recipients:
           - sssoft2023@gmail.com
-  # simulator-native-ios:
-  #   name: iOS simulator build
-  #   max_build_duration: 120
-  #   instance_type: mac_mini_m1
-  #   environment:
-  #     vars:
-  #       XCODE_WORKSPACE: "cskm.com.xcworkspace"
-  #       XCODE_SCHEME: "your_workspace_name"
-  #     xcode: 13.0
-  #     cocoapods: default
-  #   scripts:
-  #     - name: Install CocoaPods dependencies
-  #       script: | 
-  #         pod install
-  #     - name: Build the .app
-  #       script: | 
-  #         xcodebuild build \
-  #           -workspace "$XCODE_WORKSPACE" \
-  #           -scheme "$XCODE_SCHEME" \
-  #           -sdk iphonesimulator \
-  #           -destination 'platform=iOS Simulator,name=iPhone 14 Pro,OS=16.2' \
-  #           -configuration Debug \
-  #           CODE_SIGN_IDENTITY="" \
-  #           CODE_SIGNING_REQUIRED=NO \
-  #           CODE_SIGNING_ALLOWED=NO 
-  #   artifacts:
-  #     - /tmp/xcodebuild_logs/*.log
-  #     - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
-  #     - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
