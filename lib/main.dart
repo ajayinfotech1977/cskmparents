@@ -15,6 +15,7 @@ import 'package:cskmparents/web_app/web_screens.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cskmparents/photogallery_screen.dart';
 import 'dart:io';
+import 'package:upgrader/upgrader.dart';
 
 // TODO: Add stream controller
 import 'package:rxdart/rxdart.dart';
@@ -338,42 +339,56 @@ class SplashScreenWidget extends StatelessWidget {
   @override
   Widget build(context) {
     return Scaffold(
-      body: Container(
-        decoration: AppConfig.boxDecoration(),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'assets/images/cskm-logo.png',
-                width: 200,
+      body: Platform.isIOS
+          ? UpgradeAlert(
+              upgrader: Upgrader(dialogStyle: UpgradeDialogStyle.cupertino),
+              child: SplashScreenContainerWidget(),
+            )
+          : SplashScreenContainerWidget(),
+    );
+  }
+}
+
+class SplashScreenContainerWidget extends StatelessWidget {
+  const SplashScreenContainerWidget({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: AppConfig.boxDecoration(),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/images/cskm-logo.png',
+              width: 200,
+            ),
+            const SizedBox(
+              height: 30,
+            ),
+            Text(
+              "CSKM Public School",
+              style: AppConfig.boldWhite30(),
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            const Text(
+              "Parents Login",
+              style: TextStyle(
+                fontSize: 30,
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(
-                height: 30,
-              ),
-              Text(
-                "CSKM Public School",
-                style: AppConfig.boldWhite30(),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              const Text(
-                "Parents Login",
-                style: TextStyle(
-                  fontSize: 30,
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SpinKitFadingCircle(
-                color: const Color.fromARGB(255, 250, 251, 253),
-                size: 50.0,
-              ),
-              SizedBox(height: 16.0),
-              Text('Loading...'),
-            ],
-          ),
+            ),
+            SpinKitFadingCircle(
+              color: const Color.fromARGB(255, 250, 251, 253),
+              size: 50.0,
+            ),
+            SizedBox(height: 16.0),
+            Text('Loading...'),
+          ],
         ),
       ),
     );

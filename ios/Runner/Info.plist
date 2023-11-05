@@ -57,5 +57,7 @@
 	<false/>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>We need access to your photos to allow you to upload your applications.</string>
+	<key>io.flutter.embedded_views_preview</key>
+	<true/>
 </dict>
 </plist>
