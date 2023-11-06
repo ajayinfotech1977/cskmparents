@@ -6,11 +6,11 @@ workflows:
     environment:
       ios_signing:
         provisioning_profiles:
-          - development_profile_cskmparents
-          #- distribution_profile_cskmparents
+          #- development_profile_cskmparents
+          - distribution_profile_cskmparents
         certificates:
-          - development_certificate
-          #- production_certificate
+          #- development_certificate
+          - production_certificate
     integrations:
       app_store_connect: APIKeyAdminAccess
     scripts:

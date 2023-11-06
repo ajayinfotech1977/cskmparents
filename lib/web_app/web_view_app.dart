@@ -95,7 +95,7 @@ class _WebViewAppState extends State<WebViewApp> with TickerProviderStateMixin {
       ..loadRequest(Uri.parse(widget.url!))
       ..setNavigationDelegate(NavigationDelegate(
         onNavigationRequest: (request) {
-          print(request.url);
+          //print(request.url);
           // if the url ends with jpg, png, jpeg, gif, bmp, tiff, svg, webp, ico display the image
           if (request.url.endsWith('.jpg') ||
               request.url.endsWith('.png') ||
@@ -173,7 +173,7 @@ class _WebViewAppState extends State<WebViewApp> with TickerProviderStateMixin {
   void openFallbackUrl(String url) async {
     RegExp fallbackUrlRegex = RegExp(r'S.browser_fallback_url=(.*?)(;|$)');
     String? fallbackUrl = fallbackUrlRegex.firstMatch(url)?.group(1);
-    print('fallbackUrl: $fallbackUrl');
+    //print('fallbackUrl: $fallbackUrl');
     if (fallbackUrl != null) {
       await launchUrl(Uri.parse(fallbackUrl));
     }
@@ -377,13 +377,12 @@ class _WebViewAppState extends State<WebViewApp> with TickerProviderStateMixin {
                         size: 200.0,
                       ),
                       Text(
-                        //errorLoading,
-                        "There was an error loading this page",
+                        "There was an error loading this page :($errorLoading)",
                         style: TextStyle(
                           color: Colors.red.shade900,
-                          fontSize: 20.0,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 16.0,
                         ),
+                        textAlign: TextAlign.center,
                       ),
                       SizedBox(
                         height: 10.0,
