@@ -101,14 +101,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-                            colors: [
-                              Colors.pink,
-                              Colors.purple,
-                              Colors.deepPurple
-                            ], // Customize the colors
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                          ),
+            colors: [
+              Colors.pink,
+              Colors.purple,
+              Colors.deepPurple
+            ], // Customize the colors
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
         ),
         child: _notifications.isEmpty && !fetched
             ? Center(
@@ -125,9 +125,13 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       return Column(
                         children: [
                           Card(
+                            // rounded corners
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             elevation: 5,
                             margin: EdgeInsets.symmetric(
-                                vertical: 8, horizontal: 16),
+                                vertical: 4, horizontal: 8),
                             child: ListTile(
                               title: notification.status == 'U'
                                   ? Text.rich(

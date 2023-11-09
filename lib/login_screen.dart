@@ -20,6 +20,18 @@ class _LoginScreenState extends State<LoginScreen> {
   var _isLoading = false;
   String _otp = ""; // Added variable to store OTP
   bool _isOtpSent = false; // Added variable to check if OTP is sent
+  final FocusNode _usernameFocus = FocusNode(); // Create a FocusNode instance
+  final FocusNode _otpFocus = FocusNode(); // Create a FocusNode for OTP
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Add a post-frame callback to set focus once the frame is built
+    WidgetsBinding.instance!.addPostFrameCallback((_) {
+      _usernameFocus.requestFocus();
+    });
+  }
 
   void loginFailed() {
     EasyLoading.showError('Login Failed');
@@ -56,6 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
           _isLoading = false;
           //print(_otp + ' is the OTP');
         }); // Store the OTP
+        _otpFocus.requestFocus(); // Set focus on OTP field
       } else if (otpStatus == 'invalid') {
         EasyLoading.showError(
           'Invalid Mobile Number or Email.\nIf your mobile or email is valid and still you are unable to login, please contact school IT Head @ 9312375581',
@@ -178,9 +191,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   TextFormField(
                     controller: _usernameController,
+                    focusNode: _usernameFocus, // Assign the FocusNode
                     style: AppConfig.normalWhite20(),
                     decoration: InputDecoration(
-                      labelText: 'Mobile Number or Email',
+                      labelText: 'Mobile Number or Email ID',
                       labelStyle: TextStyle(
                         fontSize: 20,
                         color: Color.fromARGB(255, 248, 227, 5),
@@ -192,6 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   if (_isOtpSent)
                     TextFormField(
                       controller: _otpController,
+                      focusNode: _otpFocus, // Assign the FocusNode for OTP
                       style: AppConfig.normalWhite20(),
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(

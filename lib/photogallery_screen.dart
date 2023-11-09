@@ -76,8 +76,8 @@ class _PhotoGalleryPageState extends State<PhotoGalleryPage> {
                     Colors.purple,
                     Colors.deepPurple
                   ], // Customize the colors
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
               ),
               child: ListView.builder(
@@ -103,17 +103,17 @@ class AlbumCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.fromLTRB(4.0, 1.0, 4.0, 0.0),
       child: Card(
         elevation: 5,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15.0),
+          borderRadius: BorderRadius.circular(10.0),
         ),
         child: ListTile(
           title: Text(
             album.name,
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               // Text color
               fontWeight: FontWeight.bold,
             ),

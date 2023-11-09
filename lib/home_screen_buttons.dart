@@ -153,22 +153,45 @@ class ButtonWidget extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(2.0),
       child: SizedBox(
-        height: 20.0,
+        height: 60.0,
         child: DecoratedBox(
-          decoration: AppConfig.boxDecoration(),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.purple,
+                Colors.blue, // Dodger Blue
+              ],
+              stops: [0.0, 1.0],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              tileMode: TileMode.clamp,
+            ),
+            borderRadius: BorderRadius.circular(10.0),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.5),
+                spreadRadius: 1,
+                blurRadius: 5,
+                offset: Offset(0, 3),
+              ),
+            ],
+          ),
+          //decoration: AppConfig.boxDecoration(),
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: Color.fromARGB(0, 0, 0, 0)),
+              backgroundColor: Colors.transparent,
+              shadowColor: Colors.transparent,
+              padding: EdgeInsets.zero,
+            ),
+            onPressed: () => onTap(context),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 ShaderMask(
                   shaderCallback: (Rect bounds) {
                     return LinearGradient(
-                      colors: [Colors.grey[400]!, Colors.amber],
-                      stops: [0.0, 1.0],
+                      colors: [Colors.white, Colors.amber, Colors.white70],
+                      stops: [0.0, 0.5, 1.0],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       tileMode: TileMode.clamp,
@@ -178,7 +201,7 @@ class ButtonWidget extends StatelessWidget {
                     children: [
                       Icon(
                         icon,
-                        size: 20,
+                        size: 45,
                         //color: Color.fromARGB(255, 103, 98, 98),
                       ),
                       if (count > 0)
@@ -200,34 +223,32 @@ class ButtonWidget extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(height: 8.0),
-                Text(
-                  buttonText,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.normal,
-                    foreground: Paint()
-                      ..shader = LinearGradient(
-                        colors: [
-                          Color.fromARGB(255, 249, 249, 249),
-                          Colors.amber
-                        ],
-                        stops: [0.0, 1.0],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        tileMode: TileMode.clamp,
-                      ).createShader(Rect.fromLTWH(0.0, 0.0, 200.0, 70.0)),
+                SizedBox(height: 5.0),
+                Flexible(
+                  child: Text(
+                    buttonText,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      foreground: Paint()
+                        ..shader = LinearGradient(
+                          colors: [
+                            Colors.white,
+                            Colors.yellow,
+                          ],
+                          stops: [0.0, 1.0],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          tileMode: TileMode.clamp,
+                        ).createShader(Rect.fromLTWH(0.0, 0.0, 200.0, 70.0)),
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  textAlign: TextAlign.center,
                 ),
               ],
             ),
-            // Text(
-            //   buttonText,
-            //   style: AppConfig.normalWhite15(),
-            // ),
-            //icon: Icon(icon, size: 40),
-            onPressed: () => onTap(context),
           ),
         ),
       ),
