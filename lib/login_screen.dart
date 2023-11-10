@@ -28,7 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
 
     // Add a post-frame callback to set focus once the frame is built
-    WidgetsBinding.instance!.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       _usernameFocus.requestFocus();
     });
   }
