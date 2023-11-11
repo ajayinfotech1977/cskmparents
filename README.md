@@ -1,6 +1,6 @@
 # cskmparents
 
-A new Flutter project.
+CSKM  Parents App
 
 ## Getting Started
 
