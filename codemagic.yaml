@@ -4,6 +4,8 @@ workflows:
     max_build_duration: 120
     
     environment:
+      xcode: 13.3
+      flutter: stable
       ios_signing:
         provisioning_profiles:
           #- development_profile_cskmparents
