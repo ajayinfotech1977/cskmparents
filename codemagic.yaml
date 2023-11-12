@@ -4,15 +4,13 @@ workflows:
     max_build_duration: 120
     
     environment:
-      xcode: 13.3
-      flutter: stable
       ios_signing:
         provisioning_profiles:
-          #- development_profile_cskmparents
-          - distribution_profile_cskmparents
+          - development_profile_cskmparents
+          #- distribution_profile_cskmparents
         certificates:
-          #- development_certificate
-          - production_certificate
+          - development_certificate
+          #- production_certificate
     integrations:
       app_store_connect: APIKeyAdminAccess
     scripts:
@@ -23,9 +21,9 @@ workflows:
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
-      app_store_connect:
-        auth: integration
-        submit_to_app_store: true
+      # app_store_connect:
+      #   auth: integration
+      #   submit_to_app_store: true
       email:
         recipients:
           - sssoft2023@gmail.com
