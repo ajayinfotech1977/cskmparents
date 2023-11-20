@@ -1,4 +1,3 @@
-import 'package:cskmparents/messaging/broadcast_form.dart';
 import 'package:flutter/material.dart';
 import 'package:cskmparents/messaging/chat_screen.dart';
 //import 'package:cskmparents/messaging/broadcastscreen.dart';
@@ -16,7 +15,7 @@ class _MessageTabbedScreenState extends State<MessageTabbedScreen>
   void initState() {
     super.initState();
     _tabController = TabController(
-      length: 2,
+      length: 1,
       vsync: this,
     );
   }
@@ -35,8 +34,7 @@ class _MessageTabbedScreenState extends State<MessageTabbedScreen>
         bottom: TabBar(
           controller: _tabController,
           tabs: [
-            Tab(text: 'Students'),
-            Tab(text: 'Broadcast'),
+            Tab(text: 'Teachers and Staff'),
           ],
         ),
       ),
@@ -55,22 +53,13 @@ class _MessageTabbedScreenState extends State<MessageTabbedScreen>
       //   },
       //   child: Icon(Icons.add),
       // ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          // Screen 1 content
-          Center(
-            child: Container(
-              height: double.infinity,
-              child: Center(
-                child: StudentListScreen(),
-              ),
-            ),
+      body: Center(
+        child: Container(
+          height: double.infinity,
+          child: Center(
+            child: TeachersListScreen(),
           ),
-          // Screen 2 content
-
-          BroadcastForm(),
-        ],
+        ),
       ),
     );
   }

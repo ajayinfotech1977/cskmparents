@@ -1,20 +1,19 @@
 import 'dart:async';
-
 import 'package:cskmparents/app_config.dart';
 import 'package:flutter/material.dart';
 import 'package:cskmparents/messaging/api_service.dart';
-import 'package:cskmparents/messaging/model/student_model.dart';
+import 'package:cskmparents/messaging/model/teachers_model.dart';
 import 'package:cskmparents/messaging/model/message_model.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:intl/intl.dart';
 
-String teacherUserNo = AppConfig.globaladm_no;
+String adm_no = AppConfig.globaladm_no;
 StreamController<bool> streamController = StreamController<bool>.broadcast();
 
 class ChatScreen extends StatefulWidget {
-  final StudentModel student;
+  final TeacherModel teacher;
 
-  ChatScreen({required this.student, required this.stream});
+  ChatScreen({required this.teacher, required this.stream});
   final StreamController<bool> stream;
 
   @override
@@ -32,7 +31,6 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch initial messages when the chat screen is opened
     fetchMessages();
   }
 
@@ -44,19 +42,50 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
+  void messagePolling() async {
+    // Delay execution for 30 seconds
+    await Future.delayed(Duration(seconds: 30));
+
+    while (true) {
+      await apiService.syncMessages();
+      final messagesNew =
+          await apiService.getMessages(adm_no, widget.teacher.userno);
+
+      // Compare _messages with messagesNew and add new messages
+      final List<MessageModel> newMessages = messagesNew
+          .where((newMessage) => !_messages.any((existingMessage) =>
+              newMessage.dateTime == existingMessage.dateTime &&
+              newMessage.message == existingMessage.message))
+          .toList();
+      //print("newMessages= $newMessages");
+      // Add new messages to the stream
+      if (newMessages.isNotEmpty) {
+        if (mounted) {
+          setState(() {
+            // Update the messages list with new messages
+            _messages.addAll(newMessages);
+          });
+        }
+      }
+      // Delay execution for the next 30 seconds
+      await Future.delayed(Duration(seconds: 30));
+    }
+  }
+
   Future<void> fetchMessages() async {
     try {
       EasyLoading.show(status: 'Loading...');
       final messages =
-          await apiService.getMessages(teacherUserNo, widget.student.adm_no);
+          await apiService.getMessages(adm_no, widget.teacher.userno);
       EasyLoading.dismiss();
       if (mounted) {
         setState(() {
           _messages.addAll(messages);
-          widget.student.noOfUnreadMessages = 0;
-          //update the StudentListScreen widget
+          widget.teacher.noOfUnreadMessages = 0;
+          //update the TeachersListScreen widget
           widget.stream.add(true);
         });
+        messagePolling();
       }
     } catch (e) {
       print(e.toString());
@@ -86,14 +115,13 @@ class _ChatScreenState extends State<ChatScreen> {
     final String message = _textEditingController.text.trim();
     if (message.isNotEmpty) {
       try {
-        await apiService.sendMessage(
-            teacherUserNo, widget.student.adm_no, message);
+        await apiService.sendMessage(adm_no, widget.teacher.userno, message);
         _textEditingController.clear();
         // Update the messages list with the new message
         setState(() {
           _messages.add(MessageModel(
-            fromNo: teacherUserNo,
-            toNo: widget.student.adm_no,
+            fromNo: adm_no,
+            toNo: widget.teacher.userno,
             message: message,
             dateTime: DateTime.now(),
           ));
@@ -135,7 +163,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.student.st_name),
+        title: Text(widget.teacher.ename),
       ),
       body: Stack(
         children: [
@@ -193,7 +221,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             SizedBox(height: 8.0),
                           ],
                           Row(
-                            mainAxisAlignment: message.fromNo == teacherUserNo
+                            mainAxisAlignment: message.fromNo == adm_no
                                 ? MainAxisAlignment.end
                                 : MainAxisAlignment.start,
                             children: [
@@ -205,20 +233,16 @@ class _ChatScreenState extends State<ChatScreen> {
                                 padding: EdgeInsets.symmetric(
                                     horizontal: 12.0, vertical: 8.0),
                                 decoration: BoxDecoration(
-                                  color: message.fromNo == teacherUserNo
+                                  color: message.fromNo == adm_no
                                       ? Colors.blue
                                       : Colors.grey[300],
                                   borderRadius: BorderRadius.only(
                                     topLeft: Radius.circular(12.0),
                                     topRight: Radius.circular(12.0),
                                     bottomLeft: Radius.circular(
-                                        message.fromNo == teacherUserNo
-                                            ? 12.0
-                                            : 0.0),
+                                        message.fromNo == adm_no ? 12.0 : 0.0),
                                     bottomRight: Radius.circular(
-                                        message.fromNo == teacherUserNo
-                                            ? 0.0
-                                            : 12.0),
+                                        message.fromNo == adm_no ? 0.0 : 12.0),
                                   ),
                                 ),
                                 child: Column(
@@ -229,7 +253,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                       softWrap: true,
                                       maxLines: null,
                                       style: TextStyle(
-                                        color: message.fromNo == teacherUserNo
+                                        color: message.fromNo == adm_no
                                             ? Colors.white
                                             : Colors.black,
                                       ),
@@ -240,7 +264,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                           .format(message.dateTime),
                                       style: TextStyle(
                                         fontSize: 12.0,
-                                        color: message.fromNo == teacherUserNo
+                                        color: message.fromNo == adm_no
                                             ? Colors.white.withOpacity(0.7)
                                             : Colors.black.withOpacity(0.7),
                                       ),
@@ -308,23 +332,23 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 }
 
-class StudentListScreen extends StatefulWidget {
+class TeachersListScreen extends StatefulWidget {
   @override
-  _StudentListScreenState createState() => _StudentListScreenState();
+  _TeachersListScreenState createState() => _TeachersListScreenState();
 }
 
-class _StudentListScreenState extends State<StudentListScreen> {
-  late Future<List<StudentModel>> _studentsFuture;
+class _TeachersListScreenState extends State<TeachersListScreen> {
+  late Future<List<TeacherModel>> _teachersFuture;
   final ApiService apiService = ApiService();
   TextEditingController _searchController = TextEditingController();
-  List<StudentModel> filteredStudents = [];
-  AsyncSnapshot<List<StudentModel>>? snapshotData;
+  List<TeacherModel> filteredTeachers = [];
+  AsyncSnapshot<List<TeacherModel>>? snapshotData;
 
   @override
   void initState() {
     super.initState();
 
-    _studentsFuture = apiService.getStudents(teacherUserNo);
+    _teachersFuture = apiService.getTeachers(adm_no);
     //updateSearchResults('');
 
     streamController.stream.listen((shouldUpdate) {
@@ -332,16 +356,16 @@ class _StudentListScreenState extends State<StudentListScreen> {
         if (shouldUpdate) {
           setState(() {
             // Update the necessary data or re-fetch the updated data
-            _studentsFuture = apiService.getStudents(teacherUserNo);
+            _teachersFuture = apiService.getTeachers(adm_no);
           });
         }
       }
     });
 
     // Initialize filteredStudents with snapshot data
-    _studentsFuture.then((students) {
+    _teachersFuture.then((teachers) {
       setState(() {
-        filteredStudents = students;
+        filteredTeachers = teachers;
       });
     });
   }
@@ -360,12 +384,12 @@ class _StudentListScreenState extends State<StudentListScreen> {
     super.dispose();
   }
 
-  void _openChatScreen(StudentModel student) {
+  void _openChatScreen(TeacherModel teacher) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ChatScreen(
-          student: student,
+          teacher: teacher,
           stream: streamController,
         ),
       ),
@@ -375,11 +399,11 @@ class _StudentListScreenState extends State<StudentListScreen> {
   void updateSearchResults(String query) {
     setState(() {
       if (query.isEmpty) {
-        filteredStudents = snapshotData?.data ?? [];
+        filteredTeachers = snapshotData?.data ?? [];
       } else {
-        filteredStudents = snapshotData?.data
-                ?.where((student) =>
-                    student.st_name.toLowerCase().contains(query.toLowerCase()))
+        filteredTeachers = snapshotData?.data
+                ?.where((teacher) =>
+                    teacher.ename.toLowerCase().contains(query.toLowerCase()))
                 .toList() ??
             [];
       }
@@ -413,26 +437,26 @@ class _StudentListScreenState extends State<StudentListScreen> {
             ),
           ),
           Expanded(
-            child: FutureBuilder<List<StudentModel>>(
-              future: _studentsFuture,
+            child: FutureBuilder<List<TeacherModel>>(
+              future: _teachersFuture,
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
-                  snapshotData = AsyncSnapshot<List<StudentModel>>.withData(
+                  snapshotData = AsyncSnapshot<List<TeacherModel>>.withData(
                     ConnectionState.done,
                     snapshot.data!,
                   );
                   //filteredStudents = snapshot.data!;
                   return ListView.builder(
-                    itemCount: filteredStudents.length,
+                    itemCount: filteredTeachers.length,
                     itemBuilder: (context, index) {
-                      final student = filteredStudents[index];
+                      final teacher = filteredTeachers[index];
                       return ListTile(
                         title: Text(
-                          student.st_name,
+                          teacher.ename,
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: student.isAppInstalled
+                            color: teacher.isAppInstalled
                                 ? Colors.black
                                 : Colors.red,
                           ),
@@ -441,17 +465,17 @@ class _StudentListScreenState extends State<StudentListScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Adm No: ${student.adm_no} - Class: ${student.st_class} / ${student.st_section} (${student.feecategory})',
+                              '${teacher.designation}',
                             ),
                             Divider(),
                           ],
                         ),
-                        trailing: student.noOfUnreadMessages > 0
+                        trailing: teacher.noOfUnreadMessages > 0
                             ? CircleAvatar(
                                 radius: 10.0,
                                 backgroundColor: Colors.red,
                                 child: Text(
-                                  student.noOfUnreadMessages.toString(),
+                                  teacher.noOfUnreadMessages.toString(),
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 12.0,
@@ -459,9 +483,22 @@ class _StudentListScreenState extends State<StudentListScreen> {
                                 ),
                               )
                             : null,
-                        onTap: () => student.isAppInstalled
-                            ? _openChatScreen(student)
-                            : _openChatScreen(student),
+                        onTap: () => teacher.isAppInstalled
+                            ? _openChatScreen(teacher)
+                            : showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text('Error'),
+                                  content: Text(
+                                      '${teacher.ename} is not on the smart messaging app. Please ask the teacher to install the app.'),
+                                  actions: [
+                                    TextButton(
+                                      child: Text('OK'),
+                                      onPressed: () => Navigator.pop(context),
+                                    ),
+                                  ],
+                                ),
+                              ),
                       );
                     },
                   );

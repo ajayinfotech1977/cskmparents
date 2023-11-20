@@ -1,39 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cskmparents/database/database_helper.dart';
 
 Future<List<Album>> fetchAlbums() async {
-  final response = await http.get(Uri.parse(
-      'https://www.cskm.com/schoolexpert/cskmparents/photogallery.php'));
+  // call DatabaseHelper class to get data from table
+  final dbHelper = DatabaseHelper();
+  // initialize database
 
-  if (response.statusCode == 200) {
-    //print(response.body);
-    List<dynamic> data = json.decode(response.body);
-    return data.map((json) => Album.fromJson(json)).toList();
-  } else {
-    throw Exception('Failed to load data');
-  }
+  final _db = await dbHelper.initDatabase();
+  await dbHelper.createTablePhotoGallery(_db, 1);
+
+  //delete all data from table
+  //await dbHelper.deleteAllDataFromParentsNotifications();
+  // sync data from server
+  await dbHelper.syncDataToPhotoGallery();
+  final data = await dbHelper.getDataFromPhotoGallery();
+
+  // convert data to List<Album>
+  List<Album> _albums = List.generate(data.length, (i) {
+    return Album.fromMap(data[i]);
+  });
+
+  dbHelper.close();
+
+  return _albums;
 }
 
 class Album {
-  final int sno;
-  final String name;
-  final String date;
+  final int photoId;
+  final String heading;
+  final String photoDt;
   final String link;
 
-  Album(
-      {required this.sno,
-      required this.name,
-      required this.date,
-      required this.link});
+  Album({
+    required this.photoId,
+    required this.heading,
+    required this.photoDt,
+    required this.link,
+  });
 
-  factory Album.fromJson(Map<String, dynamic> json) {
+  factory Album.fromMap(Map<String, dynamic> map) {
     return Album(
-      sno: json['sno'],
-      name: json['name'],
-      date: json['date'],
-      link: json['link'],
+      photoId: map['photoId'],
+      heading: map['heading'],
+      photoDt: map['photoDt'],
+      link: map['link'],
     );
   }
 }
@@ -111,7 +122,7 @@ class AlbumCard extends StatelessWidget {
         ),
         child: ListTile(
           title: Text(
-            album.name,
+            album.heading,
             style: TextStyle(
               fontSize: 16,
               // Text color
@@ -119,7 +130,7 @@ class AlbumCard extends StatelessWidget {
             ),
           ),
           subtitle: Text(
-            album.date,
+            album.photoDt,
             style: TextStyle(
               fontSize: 14,
             ),

@@ -1,9 +1,8 @@
-import 'dart:convert';
-import 'package:cskmparents/app_config.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter/gestures.dart';
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cskmparents/database/database_helper.dart';
 
 class Notification {
   final String date;
@@ -17,6 +16,22 @@ class Notification {
     required this.message,
     required this.status,
   });
+
+  factory Notification.fromMap(Map<String, dynamic> map) {
+    final notificationDate =
+        DateFormat("dd-MMM-yyyy hh:mm a").parse(map['notificationDate']);
+
+    // Extract date and time from notificationDate
+    final date = DateFormat("dd-MMM-yyyy").format(notificationDate);
+    final time = DateFormat("hh:mm a").format(notificationDate);
+
+    return Notification(
+      date: date,
+      time: time,
+      message: map['notification'],
+      status: map['notificationStatus'],
+    );
+  }
 }
 
 class NotificationScreen extends StatefulWidget {
@@ -35,32 +50,28 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   Future<void> _loadNotifications() async {
-    final response = await http.post(
-      Uri.parse(
-          'https://www.cskm.com/schoolexpert/cskmparents/show_notifications.php'),
-      body: {
-        'adm_no': AppConfig.globaladm_no,
-        'secretKey': AppConfig.secreetKey,
-      },
-    );
-    //print("response is ${response.body}");
-    if (response.statusCode == 200) {
-      // show response.body in console
-      fetched = true;
-      //print(response.body);
-      final data = json.decode(response.body);
+    // call DatabaseHelper class to get data from table
+    final dbHelper = DatabaseHelper();
+    // initialize database
 
-      _notifications = List<Notification>.from(
-          data['notifications'].map((notification) => Notification(
-                date: notification['date'],
-                time: notification['time'],
-                message: notification['message'],
-                status: notification['status'],
-              )));
-      setState(() {});
-    } else {
-      throw Exception('Failed to fetch notifications');
-    }
+    final _db = await dbHelper.initDatabase();
+    await dbHelper.createTableParentsNotifications(_db, 1);
+    //delete all data from table
+    //await dbHelper.deleteAllDataFromParentsNotifications();
+    // sync data from server
+    await dbHelper.syncDataToParentsNotifications();
+    final data = await dbHelper.getDataFromParentsNotifications();
+
+    // convert data to List<Notification>
+    _notifications = List.generate(data.length, (i) {
+      return Notification.fromMap(data[i]);
+    });
+    fetched = true;
+    // close the database connection
+    setState(() {});
+    // call updateNotificationStatusToR() method to update notification status to R
+    await dbHelper.updateNotificationStatusToR();
+    dbHelper.close();
   }
 
   List<InlineSpan> parseText(String text) {
@@ -116,7 +127,15 @@ class _NotificationScreenState extends State<NotificationScreen> {
               )
             : _notifications.isEmpty
                 ? Center(
-                    child: Text('No Notification is yet sent to you'),
+                    child: Text(
+                      'You have not received any notifications yet.',
+                      // font colour white
+                      style: TextStyle(
+                        color: Colors.white,
+                        // size 20
+                        fontSize: 20,
+                      ),
+                    ),
                   )
                 : ListView.builder(
                     itemCount: _notifications.length,

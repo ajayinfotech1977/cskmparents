@@ -79,6 +79,11 @@ class _HomeScreenButtonsState extends State<HomeScreenButtons> {
           count: AppConfig.globalnotificationCount,
         ),
         ButtonWidget(
+          buttonText: 'Messaging',
+          icon: Icons.message,
+          onTap: openMessages,
+        ),
+        ButtonWidget(
           buttonText: 'Profile',
           icon: Icons.person,
           onTap: openProfile,

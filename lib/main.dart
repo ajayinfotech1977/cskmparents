@@ -295,7 +295,7 @@ class _MyAppState extends State<MyApp> {
       routes: {
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const HomeScreen(),
-        '/chatscreen': (context) => StudentListScreen(),
+        '/chatscreen': (context) => TeachersListScreen(),
         '/messagetabbedscreen': (context) => MessageTabbedScreen(),
         '/notifications': (context) => NotificationScreen(),
         '/profile': (context) => ViewProfile(),

@@ -1,58 +1,91 @@
 import 'dart:convert';
 import 'package:cskmparents/messaging/model/message_model.dart';
 import 'package:http/http.dart' as http;
-import 'package:cskmparents/messaging/model/student_model.dart';
+import 'package:cskmparents/messaging/model/teachers_model.dart';
 import 'package:cskmparents/app_config.dart';
+import 'package:cskmparents/database/database_helper.dart';
 
 class ApiService {
   static const String baseUrl = 'https://www.cskm.com/schoolexpert/cskmparents';
 
-  Future<List<StudentModel>> getStudents(String userNo) async {
+  Future<void> syncMessages() async {
+    try {
+      // call DatabaseHelper class to get data from table
+      final dbHelper = DatabaseHelper();
+      // initialize database
+
+      final _db = await dbHelper.initDatabase();
+      await dbHelper.createTableMessages(_db, 1);
+      // sync data from server
+      await dbHelper.syncDataToMessages();
+
+      dbHelper.close();
+      //print("syncMessages completed");
+    } catch (Exception) {
+      print("syncMessages Exception: $Exception");
+    }
+  }
+
+  Future<List<TeacherModel>> getTeachers(String adm_no) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/get_students.php'),
+      Uri.parse('$baseUrl/get_teachers.php'),
       body: {
-        'userNo': userNo,
+        'adm_no': adm_no,
         'secretKey': AppConfig.secreetKey,
+        'st_class': AppConfig.globalst_class,
+        'st_section': AppConfig.globalst_section,
+        'fy': AppConfig.globalfy,
       },
     );
+
+    syncMessages();
 
     if (response.statusCode == 200) {
       final jsonData = json.decode(response.body);
       //print("response= $jsonData");
-      // return List<StudentModel>.from(
+      // return List<TeacherModel>.from(
       //     //employees = List<Map<String, dynamic>>.from(data['employees']);
-      //     jsonData['students'].map((json) => StudentModel.fromJson(json)));
-      var studentList = List<StudentModel>.from(
-          jsonData['students'].map((json) => StudentModel.fromJson(json)));
+      //     jsonData['students'].map((json) => TeacherModel.fromJson(json)));
+      var teachersList = List<TeacherModel>.from(
+          jsonData['teachers'].map((json) => TeacherModel.fromJson(json)));
 
-      studentList.sort((a, b) {
+      teachersList.sort((a, b) {
         // Sort by noOfUnreadMessages in descending order
         var result = b.noOfUnreadMessages.compareTo(a.noOfUnreadMessages);
         if (result != 0) {
           return result;
         }
 
-        // If noOfUnreadMessages are equal, sort by st_name in ascending order
-        return a.st_name.compareTo(b.st_name);
+        // // sort by isAppInstalled in descending order
+        // var result2 = b.isAppInstalled ? 1 : 0 - (a.isAppInstalled ? 1 : 0);
+        // if (result2 != 0) {
+        //   return result2;
+        // }
+
+        // // sort by designation in ascending order
+        // return a.designation.compareTo(b.designation);
+        return result;
       });
 
-      return studentList;
+      return teachersList;
     } else {
-      throw Exception('Failed to load students');
+      throw Exception('Failed to load teachers');
     }
   }
 
   Future<void> sendMessage(String fromNo, String toNo, String message) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/send_message.php'),
+      Uri.parse(
+          'https://www.cskm.com/schoolexpert/cskmemp/send_message_to_teacher.php'),
       body: {
         'secretKey': AppConfig.secreetKey,
-        'userNo': fromNo.toString(),
-        'adm_no': toNo.toString(),
+        'adm_no': fromNo.toString(),
+        'userNo': toNo.toString(),
         'message': message,
+        'st_name': AppConfig.globalst_name,
       },
     );
-    //print("response= ${response.body}");
+    print("response= ${response.body}");
 
     if (response.statusCode != 200) {
       throw Exception('Failed to send message');
@@ -60,62 +93,19 @@ class ApiService {
   }
 
   Future<List<MessageModel>> getMessages(String fromNo, String toNo) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/get_messages.php'),
-      body: {
-        'secretKey': AppConfig.secreetKey,
-        'userNo': fromNo.toString(),
-        'adm_no': toNo.toString(),
-      },
-    );
+    final dbHelper = DatabaseHelper();
+    // initialize database
+    await dbHelper.initDatabase();
+    // fetch data from database
+    final data = await dbHelper.getDataFromMessages(fromNo, toNo);
+    // convert data to List<MessageModel>
+    List<MessageModel> messages = List.generate(data.length, (i) {
+      return MessageModel.fromMap(data[i]);
+    });
+    // close database connection
+    dbHelper.close();
 
-    if (response.statusCode == 200) {
-      final jsonData = json.decode(response.body);
-      //print("response= $jsonData");
-      List<MessageModel> messages = [];
-
-      if (jsonData.containsKey('messages')) {
-        List<dynamic> messageList = jsonData['messages'];
-
-        for (var messageData in messageList) {
-          if (messageData.containsKey('msgType')) {
-            String msgType = messageData['msgType'];
-            if (msgType == 'S') {
-              String fromNo = messageData['userno'].toString();
-              String toNo = messageData['adm_no'].toString();
-              String message = messageData['msg'];
-              var dateTimeStr = messageData['msgDate']['date'];
-              DateTime dateTime = DateTime.parse(dateTimeStr);
-
-              MessageModel messageModel = MessageModel(
-                  fromNo: fromNo,
-                  toNo: toNo,
-                  message: message,
-                  dateTime: dateTime);
-              messages.add(messageModel);
-            } else if (msgType == 'P') {
-              String fromNo = messageData['adm_no'].toString();
-              String toNo = messageData['userno'].toString();
-              String message = messageData['msg'];
-              var dateTimeStr = messageData['msgDate']['date'];
-              DateTime dateTime = DateTime.parse(dateTimeStr);
-
-              MessageModel messageModel = MessageModel(
-                fromNo: fromNo,
-                toNo: toNo,
-                message: message,
-                dateTime: dateTime,
-              );
-
-              messages.add(messageModel);
-            }
-          }
-        }
-      }
-      //print(messages);
-      return messages;
-    } else {
-      throw Exception('Failed to load messages');
-    }
+    //print(messages);
+    return messages;
   }
 }
