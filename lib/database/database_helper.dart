@@ -18,6 +18,16 @@ class DatabaseHelper {
     return _database;
   }
 
+  // function to check if the database is open
+  Future<bool> isDatabaseOpen() async {
+    final db = await database;
+    if (db.isOpen) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   Future<Database> initDatabase() async {
     final databasesPath = await getDatabasesPath();
     final path = join(databasesPath, 'cskmparents.db');
@@ -253,7 +263,8 @@ class DatabaseHelper {
 
     // fetch max(msgId) from messages table
     final maxMsgId = Sqflite.firstIntValue(
-      await db.rawQuery('SELECT MAX(msgId) FROM messages'),
+      await db.rawQuery('SELECT MAX(msgId) FROM messages WHERE adm_no = ?',
+          [AppConfig.globaladmNo]),
     );
     // if maxMsgId is null, then set it to 0 in maxMsgIdNotNull
     final maxMsgIdNotNull = maxMsgId == null ? 0 : maxMsgId;
@@ -311,6 +322,24 @@ class DatabaseHelper {
       whereArgs: [userno, adm_no],
       orderBy: 'msgId ASC',
     );
+  }
+
+  // function to update the messageStatus to R for the given adm_no and userno
+  Future<void> updateMessageStatusToR(adm_no, userno) async {
+    //print(
+    //"updateMessageStatusToR called for adm_no=$adm_no and userno=$userno");
+
+    await http.post(
+      Uri.parse(
+          'https://www.cskm.com/schoolexpert/cskmparents/update_messages.php'),
+      body: {
+        'userno': userno,
+        'adm_no': adm_no,
+        'secretKey': AppConfig.secreetKey,
+        // Add other required parameters here
+      },
+    );
+    //print("response= ${response.body}");
   }
 
   // close the database

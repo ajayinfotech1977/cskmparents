@@ -1,5 +1,12 @@
+import 'dart:async';
 import 'package:cskmparents/app_config.dart';
+import 'package:cskmparents/messaging/message_tabbed_screen.dart';
+import 'package:cskmparents/notifications_sreen.dart';
 import 'package:flutter/material.dart';
+import 'package:cskmparents/custom_data_stream.dart';
+
+StreamController<CustomData> streamController =
+    StreamController<CustomData>.broadcast();
 
 class HomeScreenButtons extends StatefulWidget {
   const HomeScreenButtons({super.key});
@@ -9,21 +16,60 @@ class HomeScreenButtons extends StatefulWidget {
 }
 
 class _HomeScreenButtonsState extends State<HomeScreenButtons> {
-  bool classTeacher = false;
-  //code to store classTeacher in SharedPreferences to the global variable classTeacher
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
 
-  //code to fetch classTeacher from SharedPreferences
+    streamController.stream.listen((customData) {
+      if (mounted) {
+        // print('customData.form: ${customData.form}');
+        // print('customData.count: ${customData.count}');
+        setState(() {
+          if (customData.form == 'message') {
+            AppConfig.globalmessageCount =
+                AppConfig.globalmessageCount - customData.count;
+          } else if (customData.form == 'notification') {
+            AppConfig.globalnotificationCount = customData.count;
+          }
+        });
+      }
+    });
+  }
+
+  // void openMessages(context) {
+  //   Navigator.pushNamed(context, '/messagetabbedscreen');
+  // }
 
   void openMessages(context) {
-    Navigator.pushNamed(context, '/messagetabbedscreen');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MessageTabbedScreen(
+          stream: streamController,
+        ),
+      ),
+    );
   }
 
   void openSchoolExpert(context) {
     Navigator.pushNamed(context, '/parentlogin');
   }
 
+  // void openNotifications(context) {
+
+  //   Navigator.pushNamed(context, '/notifications');
+  // }
+
   void openNotifications(context) {
-    Navigator.pushNamed(context, '/notifications');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => NotificationScreen(
+          stream: streamController,
+        ),
+      ),
+    );
   }
 
   void openProfile(context) {
@@ -82,6 +128,7 @@ class _HomeScreenButtonsState extends State<HomeScreenButtons> {
           buttonText: 'Messaging',
           icon: Icons.message,
           onTap: openMessages,
+          count: AppConfig.globalmessageCount,
         ),
         ButtonWidget(
           buttonText: 'Profile',

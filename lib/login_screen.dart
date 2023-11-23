@@ -103,6 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (response.statusCode == 200) {
+      //print(response.body);
       var data = jsonDecode(response.body);
       int countData = data.length;
       //print("countData is $countData");
@@ -128,6 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
           var fyP = dataI['fyP'].toString();
           var loginByP = dataI['loginByP'];
           var notificationCount = dataI['notificationCount'];
+          var messagesCount = dataI['messagesCount'];
           var fy = dataI['fy'].toString();
           var admNo = dataI['admNo'].toString();
           var loginBy = dataI['loginBy'];
@@ -145,6 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
               fyP: fyP,
               loginByP: loginByP,
               notificationCount: notificationCount,
+              messagesCount: messagesCount,
               fy: fy,
               admNo: admNo,
               loginBy: loginBy);

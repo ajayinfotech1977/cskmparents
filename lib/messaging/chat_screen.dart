@@ -1,26 +1,31 @@
 import 'dart:async';
 import 'package:cskmparents/app_config.dart';
+import 'package:cskmparents/custom_data_stream.dart';
 import 'package:flutter/material.dart';
 import 'package:cskmparents/messaging/api_service.dart';
 import 'package:cskmparents/messaging/model/teachers_model.dart';
 import 'package:cskmparents/messaging/model/message_model.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
-String adm_no = AppConfig.globaladm_no;
 StreamController<bool> streamController = StreamController<bool>.broadcast();
 
 class ChatScreen extends StatefulWidget {
   final TeacherModel teacher;
-
-  ChatScreen({required this.teacher, required this.stream});
   final StreamController<bool> stream;
 
+  ChatScreen({
+    required this.teacher,
+    required this.stream,
+  });
+
   @override
-  _ChatScreenState createState() => _ChatScreenState();
+  ChatScreenState createState() => ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   final ApiService apiService = ApiService();
   final TextEditingController _textEditingController = TextEditingController();
   final List<MessageModel> _messages = [];
@@ -28,64 +33,164 @@ class _ChatScreenState extends State<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
   bool sendMessageClicked = false;
 
+  bool isKeyboardVisible = false;
+  late StreamSubscription<bool> keyboardSubscription;
+
   @override
   void initState() {
     super.initState();
+    AppConfig.isChatScreenActive = true;
     fetchMessages();
+
+    // Listen to keyboard visibility changes
+    keyboardSubscription =
+        KeyboardVisibilityController().onChange.listen((bool visible) {
+      setState(() {
+        //print("isKeyboardVisible= $visible");
+        isKeyboardVisible = visible;
+        if (visible) {
+          _scrollToLastMessage();
+          // Scroll up when the keyboard is opened
+          // _scrollController.animateTo(
+          //   _scrollController.position.maxScrollExtent,
+          //   duration: Duration(milliseconds: 300),
+          //   curve: Curves.easeOut,
+          // );
+        }
+      });
+    });
+
+    // TODO: Set up foreground message handler
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      var data = message.data;
+      if (data.isNotEmpty) {
+        //print(data);
+        if (data.containsKey('notificationType')) {
+          String dataValue = data['notificationType'];
+          if (dataValue == 'Message' && AppConfig.isChatScreenActive) {
+            //print("datavalue is Message");
+            ApiService apiService = ApiService();
+            await apiService.syncMessages();
+            // Set the _isBroadcastMessage to true
+            // AppConfig.isNewMessage = true;
+            // _messageNotifier.isMessageReceived = true;
+            getNewMessages();
+            //print("Message received completed");
+          }
+          // Process the data as needed
+          //print('Received data from PHP: $dataValue');
+        }
+      }
+    });
   }
 
   @override
   void dispose() {
+    AppConfig.isChatScreenActive = false;
+    keyboardSubscription.cancel();
+
     if (!mounted) {
       widget.stream.close();
     }
+    // stop polling
+    //isChatScreenActive = false;
+    // Remove the listener when the widget is disposed
     super.dispose();
   }
 
-  void messagePolling() async {
-    // Delay execution for 30 seconds
-    await Future.delayed(Duration(seconds: 30));
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+  }
 
-    while (true) {
-      await apiService.syncMessages();
-      final messagesNew =
-          await apiService.getMessages(adm_no, widget.teacher.userno);
+  void _scrollToLastMessage() {
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
 
-      // Compare _messages with messagesNew and add new messages
-      final List<MessageModel> newMessages = messagesNew
-          .where((newMessage) => !_messages.any((existingMessage) =>
-              newMessage.dateTime == existingMessage.dateTime &&
-              newMessage.message == existingMessage.message))
-          .toList();
-      //print("newMessages= $newMessages");
-      // Add new messages to the stream
-      if (newMessages.isNotEmpty) {
-        if (mounted) {
-          setState(() {
-            // Update the messages list with new messages
-            _messages.addAll(newMessages);
-          });
-        }
+  Future<void> getNewMessages() async {
+    //print("getNewMessages called");
+    // sync data from server
+    //await apiService.syncMessages();
+    final messagesNew = await apiService.getMessages(
+        AppConfig.globaladmNo, widget.teacher.userno);
+
+    // Compare _messages with messagesNew and add new messages
+    final List<MessageModel> newMessages = messagesNew
+        .where((newMessage) => !_messages.any((existingMessage) =>
+            newMessage.dateTime == existingMessage.dateTime &&
+            newMessage.message == existingMessage.message))
+        .toList();
+    //print("newMessages= $newMessages");
+    // Add new messages to the stream
+    if (newMessages.isNotEmpty) {
+      //print("newMessages.isNotEmpty");
+      if (mounted) {
+        setState(() {
+          // Update the messages list with new messages
+          _messages.addAll(newMessages);
+        });
       }
-      // Delay execution for the next 30 seconds
-      await Future.delayed(Duration(seconds: 30));
     }
   }
+
+  // void messagePolling() async {
+  //   // Delay execution for 30 seconds
+  //   await Future.delayed(Duration(seconds: 30));
+
+  //   while (isChatScreenActive) {
+  //     print("messagePolling called");
+  //     if (AppConfig.isNewMessage) {
+  //       final messagesNew =
+  //           await apiService.getMessages(adm_no, widget.teacher.userno);
+
+  //       // Compare _messages with messagesNew and add new messages
+  //       final List<MessageModel> newMessages = messagesNew
+  //           .where((newMessage) => !_messages.any((existingMessage) =>
+  //               newMessage.dateTime == existingMessage.dateTime &&
+  //               newMessage.message == existingMessage.message))
+  //           .toList();
+  //       //print("newMessages= $newMessages");
+  //       // Add new messages to the stream
+  //       if (newMessages.isNotEmpty) {
+  //         if (mounted) {
+  //           setState(() {
+  //             // Update the messages list with new messages
+  //             _messages.addAll(newMessages);
+  //           });
+  //         }
+  //       }
+  //       AppConfig.isNewMessage = false;
+  //       // Delay execution for the next 30 seconds
+  //     }
+  //     await Future.delayed(Duration(seconds: 1));
+  //   }
+  // }
 
   Future<void> fetchMessages() async {
     try {
       EasyLoading.show(status: 'Loading...');
-      final messages =
-          await apiService.getMessages(adm_no, widget.teacher.userno);
+      final messages = await apiService.getMessages(
+          AppConfig.globaladmNo, widget.teacher.userno);
       EasyLoading.dismiss();
       if (mounted) {
         setState(() {
           _messages.addAll(messages);
+          AppConfig.globalmessageCount =
+              AppConfig.globalmessageCount - widget.teacher.noOfUnreadMessages;
           widget.teacher.noOfUnreadMessages = 0;
+
           //update the TeachersListScreen widget
           widget.stream.add(true);
         });
-        messagePolling();
+        // Change the status of message to read
+        await apiService.updateMessageStatus(
+            AppConfig.globaladmNo, widget.teacher.userno);
+        // start polling and listening for new messages
+        //messagePolling();
       }
     } catch (e) {
       print(e.toString());
@@ -115,17 +220,20 @@ class _ChatScreenState extends State<ChatScreen> {
     final String message = _textEditingController.text.trim();
     if (message.isNotEmpty) {
       try {
-        await apiService.sendMessage(adm_no, widget.teacher.userno, message);
+        await apiService.sendMessage(
+            AppConfig.globaladmNo, widget.teacher.userno, message);
         _textEditingController.clear();
         // Update the messages list with the new message
-        setState(() {
-          _messages.add(MessageModel(
-            fromNo: adm_no,
-            toNo: widget.teacher.userno,
-            message: message,
-            dateTime: DateTime.now(),
-          ));
-        });
+        getNewMessages();
+        // setState(() {
+
+        //   // _messages.add(MessageModel(
+        //   //   fromNo: adm_no,
+        //   //   toNo: widget.teacher.userno,
+        //   //   message: message,
+        //   //   dateTime: DateTime.now(),
+        //   // ));
+        // });
       } catch (e) {
         if (this.mounted) {
           setState(() {
@@ -221,9 +329,10 @@ class _ChatScreenState extends State<ChatScreen> {
                             SizedBox(height: 8.0),
                           ],
                           Row(
-                            mainAxisAlignment: message.fromNo == adm_no
-                                ? MainAxisAlignment.end
-                                : MainAxisAlignment.start,
+                            mainAxisAlignment:
+                                message.fromNo == AppConfig.globaladmNo
+                                    ? MainAxisAlignment.end
+                                    : MainAxisAlignment.start,
                             children: [
                               Container(
                                 constraints: BoxConstraints(
@@ -233,16 +342,20 @@ class _ChatScreenState extends State<ChatScreen> {
                                 padding: EdgeInsets.symmetric(
                                     horizontal: 12.0, vertical: 8.0),
                                 decoration: BoxDecoration(
-                                  color: message.fromNo == adm_no
+                                  color: message.fromNo == AppConfig.globaladmNo
                                       ? Colors.blue
                                       : Colors.grey[300],
                                   borderRadius: BorderRadius.only(
                                     topLeft: Radius.circular(12.0),
                                     topRight: Radius.circular(12.0),
                                     bottomLeft: Radius.circular(
-                                        message.fromNo == adm_no ? 12.0 : 0.0),
+                                        message.fromNo == AppConfig.globaladmNo
+                                            ? 12.0
+                                            : 0.0),
                                     bottomRight: Radius.circular(
-                                        message.fromNo == adm_no ? 0.0 : 12.0),
+                                        message.fromNo == AppConfig.globaladmNo
+                                            ? 0.0
+                                            : 12.0),
                                   ),
                                 ),
                                 child: Column(
@@ -253,7 +366,8 @@ class _ChatScreenState extends State<ChatScreen> {
                                       softWrap: true,
                                       maxLines: null,
                                       style: TextStyle(
-                                        color: message.fromNo == adm_no
+                                        color: message.fromNo ==
+                                                AppConfig.globaladmNo
                                             ? Colors.white
                                             : Colors.black,
                                       ),
@@ -264,7 +378,8 @@ class _ChatScreenState extends State<ChatScreen> {
                                           .format(message.dateTime),
                                       style: TextStyle(
                                         fontSize: 12.0,
-                                        color: message.fromNo == adm_no
+                                        color: message.fromNo ==
+                                                AppConfig.globaladmNo
                                             ? Colors.white.withOpacity(0.7)
                                             : Colors.black.withOpacity(0.7),
                                       ),
@@ -333,6 +448,8 @@ class _ChatScreenState extends State<ChatScreen> {
 }
 
 class TeachersListScreen extends StatefulWidget {
+  final StreamController<CustomData> streamReadMessages;
+  TeachersListScreen({required this.streamReadMessages});
   @override
   _TeachersListScreenState createState() => _TeachersListScreenState();
 }
@@ -340,7 +457,6 @@ class TeachersListScreen extends StatefulWidget {
 class _TeachersListScreenState extends State<TeachersListScreen> {
   late Future<List<TeacherModel>> _teachersFuture;
   final ApiService apiService = ApiService();
-  TextEditingController _searchController = TextEditingController();
   List<TeacherModel> filteredTeachers = [];
   AsyncSnapshot<List<TeacherModel>>? snapshotData;
 
@@ -348,32 +464,23 @@ class _TeachersListScreenState extends State<TeachersListScreen> {
   void initState() {
     super.initState();
 
-    _teachersFuture = apiService.getTeachers(adm_no);
-    //updateSearchResults('');
+    _teachersFuture = apiService.getTeachers(AppConfig.globaladmNo);
 
     streamController.stream.listen((shouldUpdate) {
       if (mounted) {
         if (shouldUpdate) {
           setState(() {
-            // Update the necessary data or re-fetch the updated data
-            _teachersFuture = apiService.getTeachers(adm_no);
+            _teachersFuture = apiService.getTeachers(AppConfig.globaladmNo);
           });
         }
       }
     });
 
-    // Initialize filteredStudents with snapshot data
     _teachersFuture.then((teachers) {
       setState(() {
         filteredTeachers = teachers;
       });
     });
-  }
-
-  @override
-  void didChangeDependencies() {
-    // TODO: implement didChangeDependencies
-    super.didChangeDependencies();
   }
 
   @override
@@ -385,6 +492,8 @@ class _TeachersListScreenState extends State<TeachersListScreen> {
   }
 
   void _openChatScreen(TeacherModel teacher) {
+    widget.streamReadMessages
+        .add(CustomData(count: teacher.noOfUnreadMessages, form: 'message'));
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -396,57 +505,22 @@ class _TeachersListScreenState extends State<TeachersListScreen> {
     );
   }
 
-  void updateSearchResults(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        filteredTeachers = snapshotData?.data ?? [];
-      } else {
-        filteredTeachers = snapshotData?.data
-                ?.where((teacher) =>
-                    teacher.ename.toLowerCase().contains(query.toLowerCase()))
-                .toList() ??
-            [];
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        // Close keypad when user taps outside of the search box
-        FocusScope.of(context).unfocus();
-      },
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) {
-                updateSearchResults(value);
-              },
-              decoration: InputDecoration(
-                labelText: 'Search',
-                prefixIcon: Icon(Icons.search),
-                //create a circular border around search bar
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20.0),
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: FutureBuilder<List<TeacherModel>>(
-              future: _teachersFuture,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  snapshotData = AsyncSnapshot<List<TeacherModel>>.withData(
-                    ConnectionState.done,
-                    snapshot.data!,
-                  );
-                  //filteredStudents = snapshot.data!;
-                  return ListView.builder(
+    return Column(
+      children: [
+        Expanded(
+          child: FutureBuilder<List<TeacherModel>>(
+            future: _teachersFuture,
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                snapshotData = AsyncSnapshot<List<TeacherModel>>.withData(
+                  ConnectionState.done,
+                  snapshot.data!,
+                );
+                return Padding(
+                  padding: EdgeInsets.fromLTRB(5, 20, 5, 10),
+                  child: ListView.builder(
                     itemCount: filteredTeachers.length,
                     itemBuilder: (context, index) {
                       final teacher = filteredTeachers[index];
@@ -464,9 +538,7 @@ class _TeachersListScreenState extends State<TeachersListScreen> {
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              '${teacher.designation}',
-                            ),
+                            Text('${teacher.designation}'),
                             Divider(),
                           ],
                         ),
@@ -501,16 +573,16 @@ class _TeachersListScreenState extends State<TeachersListScreen> {
                               ),
                       );
                     },
-                  );
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Failed to load students'));
-                }
-                return Center(child: CircularProgressIndicator());
-              },
-            ),
+                  ),
+                );
+              } else if (snapshot.hasError) {
+                return Center(child: Text('Failed to load students'));
+              }
+              return Center(child: CircularProgressIndicator());
+            },
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

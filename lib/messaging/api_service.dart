@@ -12,15 +12,13 @@ class ApiService {
     try {
       // call DatabaseHelper class to get data from table
       final dbHelper = DatabaseHelper();
-      // initialize database
-
       final _db = await dbHelper.initDatabase();
       await dbHelper.createTableMessages(_db, 1);
       // sync data from server
       await dbHelper.syncDataToMessages();
 
       dbHelper.close();
-      //print("syncMessages completed");
+      print("syncMessages completed");
     } catch (Exception) {
       print("syncMessages Exception: $Exception");
     }
@@ -66,7 +64,6 @@ class ApiService {
         // return a.designation.compareTo(b.designation);
         return result;
       });
-
       return teachersList;
     } else {
       throw Exception('Failed to load teachers');
@@ -85,7 +82,7 @@ class ApiService {
         'st_name': AppConfig.globalst_name,
       },
     );
-    print("response= ${response.body}");
+    //print("response= ${response.body}");
 
     if (response.statusCode != 200) {
       throw Exception('Failed to send message');
@@ -98,6 +95,8 @@ class ApiService {
     await dbHelper.initDatabase();
     // fetch data from database
     final data = await dbHelper.getDataFromMessages(fromNo, toNo);
+    // print("fromNo= $fromNo, toNo= $toNo");
+    // print(data);
     // convert data to List<MessageModel>
     List<MessageModel> messages = List.generate(data.length, (i) {
       return MessageModel.fromMap(data[i]);
@@ -107,5 +106,16 @@ class ApiService {
 
     //print(messages);
     return messages;
+  }
+
+  // function to update the status of message to read for the userno and adm_no
+  Future<void> updateMessageStatus(String adm_no, String userno) async {
+    final dbHelper = DatabaseHelper();
+    // initialize database
+    await dbHelper.initDatabase();
+    // update the status of message to read for the userno and adm_no
+    await dbHelper.updateMessageStatusToR(adm_no, userno);
+    // close database connection
+    dbHelper.close();
   }
 }

@@ -1,8 +1,12 @@
+import 'dart:async';
+import 'package:cskmparents/app_config.dart';
+import 'package:cskmparents/custom_data_stream.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cskmparents/database/database_helper.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class Notification {
   final String date;
@@ -35,6 +39,13 @@ class Notification {
 }
 
 class NotificationScreen extends StatefulWidget {
+  final StreamController<CustomData> stream;
+
+  const NotificationScreen({
+    Key? key,
+    required this.stream,
+  }) : super(key: key);
+
   @override
   _NotificationScreenState createState() => _NotificationScreenState();
 }
@@ -42,11 +53,37 @@ class NotificationScreen extends StatefulWidget {
 class _NotificationScreenState extends State<NotificationScreen> {
   List<Notification> _notifications = [];
   bool fetched = false;
+  ValueNotifier<int> notificationCountNotifier =
+      ValueNotifier<int>(AppConfig.globalnotificationCount);
 
   @override
   void initState() {
     super.initState();
+    AppConfig.isNotificationScreenActive = true;
     _loadNotifications();
+
+    // TODO: Set up foreground message handler
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      var data = message.data;
+      if (data.isNotEmpty) {
+        //print(data);
+        if (data.containsKey('notificationType')) {
+          String dataValue = data['notificationType'];
+          if (dataValue == 'Notification' &&
+              AppConfig.isNotificationScreenActive) {
+            _loadNotifications();
+          }
+          // Process the data as needed
+          //print('Received data from PHP: $dataValue');
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    AppConfig.isNotificationScreenActive = false;
+    super.dispose();
   }
 
   Future<void> _loadNotifications() async {
@@ -68,9 +105,17 @@ class _NotificationScreenState extends State<NotificationScreen> {
     });
     fetched = true;
     // close the database connection
-    setState(() {});
+    if (mounted) {
+      setState(() {
+        widget.stream.add(CustomData(count: 0, form: 'notification'));
+        notificationCountNotifier.value = 0;
+      });
+    }
+
     // call updateNotificationStatusToR() method to update notification status to R
+
     await dbHelper.updateNotificationStatusToR();
+
     dbHelper.close();
   }
 

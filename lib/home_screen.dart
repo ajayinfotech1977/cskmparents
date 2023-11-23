@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cskmparents/app_config.dart';
 import 'package:cskmparents/home_screen_buttons.dart';
 import 'package:flutter/material.dart';
@@ -5,6 +6,11 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:cskmparents/notifications_sreen.dart';
+import 'package:cskmparents/custom_data_stream.dart';
+
+StreamController<CustomData> streamController =
+    StreamController<CustomData>.broadcast();
 
 enum MenuItem {
   logout,
@@ -25,6 +31,21 @@ class _HomeScreenState extends State<HomeScreen> {
     // TODO: implement initState
     super.initState();
     updateGlobalst_name();
+
+    streamController.stream.listen((customData) {
+      if (mounted) {
+        // print('customData.form: ${customData.form}');
+        // print('customData.count: ${customData.count}');
+        setState(() {
+          if (customData.form == 'message') {
+            AppConfig.globalmessageCount =
+                AppConfig.globalmessageCount - customData.count;
+          } else if (customData.form == 'notification') {
+            AppConfig.globalnotificationCount = customData.count;
+          }
+        });
+      }
+    });
   }
 
   // Future<void> _loadGlobalSt_Name() async {
@@ -81,7 +102,14 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             onPressed: () {
-              Navigator.pushNamed(context, '/notifications');
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => NotificationScreen(
+                    stream: streamController,
+                  ),
+                ),
+              );
             },
           ),
           PopupMenuButton<MenuItem>(
@@ -107,9 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
               globalstNameNotifier: updateGlobalst_name,
             ),
           ),
-          Expanded(
-            child: HomeScreenButtons(),
-          ),
+          Expanded(child: HomeScreenButtons()),
         ],
       ),
     );

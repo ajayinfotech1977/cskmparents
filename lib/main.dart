@@ -20,10 +20,6 @@ import 'package:upgrader/upgrader.dart';
 // TODO: Add stream controller
 import 'package:rxdart/rxdart.dart';
 
-import 'messaging/chat_screen.dart';
-import 'messaging/message_tabbed_screen.dart';
-import 'notifications_sreen.dart';
-
 // used to pass messages from event handler to the UI
 final _messageStreamController = BehaviorSubject<RemoteMessage>();
 //const kDebugMode = true;
@@ -84,9 +80,18 @@ void initializeFirebase() async {
   //print('Registration Token=$token');
 
   // TODO: Set up foreground message handler
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
     String title = message.notification?.title as String;
     String msg = message.notification?.body as String;
+    var data = message.data;
+    String dataValue = '';
+    if (data.isNotEmpty) {
+      //print(data);
+      if (data.containsKey('notificationType')) {
+        dataValue = data['notificationType'];
+      }
+    }
+
     /**********For Reading the data and using it uncomment below lines */
     // var data = message.data;
     // if (data.isNotEmpty) {
@@ -97,8 +102,10 @@ void initializeFirebase() async {
     //     print('Received data from PHP: $dataValue');
     //   }
     // }
+    if (!(AppConfig.isChatScreenActive && dataValue == 'Message')) {
+      showNotification(title, msg);
+    }
 
-    showNotification(title, msg);
     // if (kDebugMode) {
     //   print('Handling a foreground message: ${message.messageId}');
     //   print('Message data: ${message.data}');
@@ -295,9 +302,6 @@ class _MyAppState extends State<MyApp> {
       routes: {
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const HomeScreen(),
-        '/chatscreen': (context) => TeachersListScreen(),
-        '/messagetabbedscreen': (context) => MessageTabbedScreen(),
-        '/notifications': (context) => NotificationScreen(),
         '/profile': (context) => ViewProfile(),
         '/marks': (context) => ViewMarks(),
         '/reportcard': (context) => ViewReportCard(),

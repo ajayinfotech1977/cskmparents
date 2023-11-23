@@ -23,11 +23,15 @@ class AppConfig {
   static String globalfyP = "";
   static String globalloginByP = "";
   static int globalnotificationCount = 0;
+  static int globalmessageCount = 0;
   static String globalfy = "";
   static String globaladmNo = "";
   static String globalloginBy = "";
   static int globalsno = 1;
   static String globalLastSelected_adm_no = "";
+  static bool isNewMessage = false;
+  static bool isChatScreenActive = false;
+  static bool isNotificationScreenActive = false;
 
   static BoxDecoration boxDecoration() {
     return const BoxDecoration(
@@ -97,7 +101,7 @@ class AppConfig {
           'encrypted': 'No',
         },
       );
-      //print("response = $response");
+      //print("response = ${response.body}");
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
         int countData = data.length;
@@ -124,6 +128,7 @@ class AppConfig {
             var fyP = dataI['fyP'].toString();
             var loginByP = dataI['loginByP'];
             var notificationCount = dataI['notificationCount'];
+            var messagesCount = dataI['messagesCount'];
             var fy = dataI['fy'].toString();
             var admNo = dataI['admNo'].toString();
             var loginBy = dataI['loginBy'];
@@ -141,6 +146,7 @@ class AppConfig {
                 fyP: fyP,
                 loginByP: loginByP,
                 notificationCount: notificationCount,
+                messagesCount: messagesCount,
                 fy: fy,
                 admNo: admNo,
                 loginBy: loginBy);
@@ -260,6 +266,7 @@ class AppConfig {
         globalfyP = students[0].fyP;
         globalloginByP = students[0].loginByP;
         globalnotificationCount = students[0].notificationCount;
+        globalmessageCount = students[0].messagesCount;
         globalfy = students[0].fy;
         globaladmNo = students[0].admNo;
         globalloginBy = students[0].loginBy;
@@ -300,6 +307,7 @@ class AppConfig {
             globalfyP = students[i].fyP;
             globalloginByP = students[i].loginByP;
             globalnotificationCount = students[i].notificationCount;
+            globalmessageCount = students[i].messagesCount;
             globalfy = students[i].fy;
             globaladmNo = students[i].admNo;
             globalloginBy = students[i].loginBy;
@@ -348,6 +356,7 @@ class AppConfig {
           globalfyP = students[i].fyP;
           globalloginByP = students[i].loginByP;
           globalnotificationCount = students[i].notificationCount;
+          globalmessageCount = students[i].messagesCount;
           globalfy = students[i].fy;
           globaladmNo = students[i].admNo;
           globalloginBy = students[i].loginBy;
@@ -376,6 +385,7 @@ class Student {
   String fyP;
   String loginByP;
   int notificationCount;
+  int messagesCount;
   String fy;
   String admNo;
   String loginBy;
@@ -393,6 +403,7 @@ class Student {
     required this.fyP,
     required this.loginByP,
     required this.notificationCount,
+    required this.messagesCount,
     required this.fy,
     required this.admNo,
     required this.loginBy,
@@ -411,6 +422,7 @@ class Student {
         fyP: json["fyP"],
         loginByP: json["loginByP"],
         notificationCount: json["notificationCount"],
+        messagesCount: json["messagesCount"],
         fy: json["fy"],
         admNo: json["admNo"],
         loginBy: json["loginBy"],
@@ -429,6 +441,7 @@ class Student {
         "fyP": student.fyP,
         "loginByP": student.loginByP,
         "notificationCount": student.notificationCount,
+        "messagesCount": student.messagesCount,
         "fy": student.fy,
         "admNo": student.admNo,
         "loginBy": student.loginBy,

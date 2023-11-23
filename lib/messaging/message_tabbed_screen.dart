@@ -1,8 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cskmparents/messaging/chat_screen.dart';
+import 'package:cskmparents/custom_data_stream.dart';
 //import 'package:cskmparents/messaging/broadcastscreen.dart';
 
 class MessageTabbedScreen extends StatefulWidget {
+  final StreamController<CustomData> stream;
+  MessageTabbedScreen({required this.stream});
   @override
   _MessageTabbedScreenState createState() => _MessageTabbedScreenState();
 }
@@ -31,12 +35,12 @@ class _MessageTabbedScreenState extends State<MessageTabbedScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text('CSKM Smart Messaging'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(text: 'Teachers and Staff'),
-          ],
-        ),
+        // bottom: TabBar(
+        //   controller: _tabController,
+        //   tabs: [
+        //     Tab(text: 'Teachers and Staff'),
+        //   ],
+        // ),
       ),
       // floatingActionButton: FloatingActionButton(
       //   onPressed: () {
@@ -57,7 +61,7 @@ class _MessageTabbedScreenState extends State<MessageTabbedScreen>
         child: Container(
           height: double.infinity,
           child: Center(
-            child: TeachersListScreen(),
+            child: TeachersListScreen(streamReadMessages: widget.stream),
           ),
         ),
       ),
