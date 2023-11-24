@@ -10,7 +10,7 @@ import 'package:webview_flutter_android/webview_flutter_android.dart'
 import 'package:image_picker/image_picker.dart' as image_picker;
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
-import 'package:pdf_viewer_plugin/pdf_viewer_plugin.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:path/path.dart' as path;
 import 'package:url_launcher/url_launcher.dart';
 
@@ -281,7 +281,7 @@ class _WebViewAppState extends State<WebViewApp> with TickerProviderStateMixin {
                               children: [
                                 Expanded(
                                   child: Container(
-                                    child: PdfView(path: pdfFlePath!),
+                                    child: SfPdfViewer.file(File(pdfFlePath!)),
                                   ),
                                 ),
                               ],

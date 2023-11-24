@@ -53,7 +53,7 @@ dependencies:
   url_launcher: ^6.2.1
   file_picker: ^6.1.1
   image_picker: ^1.0.4
-  pdf_viewer_plugin: ^2.0.1
+  syncfusion_flutter_pdfviewer: ^23.1.44
   path_provider: ^2.1.1
   cached_network_image: ^3.3.0
   upgrader: ^8.2.0
