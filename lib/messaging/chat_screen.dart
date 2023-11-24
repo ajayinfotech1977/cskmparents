@@ -69,8 +69,8 @@ class ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
           String dataValue = data['notificationType'];
           if (dataValue == 'Message' && AppConfig.isChatScreenActive) {
             //print("datavalue is Message");
-            ApiService apiService = ApiService();
-            await apiService.syncMessages();
+            // ApiService apiService = ApiService();
+            // await apiService.syncMessages();
             // Set the _isBroadcastMessage to true
             // AppConfig.isNewMessage = true;
             // _messageNotifier.isMessageReceived = true;
@@ -114,7 +114,7 @@ class ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   Future<void> getNewMessages() async {
     //print("getNewMessages called");
     // sync data from server
-    //await apiService.syncMessages();
+    await apiService.syncMessages();
     final messagesNew = await apiService.getMessages(
         AppConfig.globaladmNo, widget.teacher.userno);
 
