@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:cskmparents/database/database_helper.dart';
 
 class AppConfig {
   /*below is a secretkey encrypted key which will go with each post 
@@ -233,6 +234,9 @@ class AppConfig {
     prefs.clear();
     // set deviceToken back to shared preferences
     prefs.setString('deviceToken', deviceToken!);
+
+    // delete database by calling removeDatabase() in database_helper.dart
+    await DatabaseHelper().removeDatabase();
   }
 
   static void configLoading() {

@@ -347,4 +347,11 @@ class DatabaseHelper {
     final db = await database;
     db.close();
   }
+
+  // delete database
+  Future<void> removeDatabase() async {
+    final databasesPath = await getDatabasesPath();
+    final path = join(databasesPath, 'cskmparents.db');
+    await deleteDatabase(path);
+  }
 }

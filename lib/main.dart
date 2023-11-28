@@ -248,8 +248,20 @@ class _MyAppState extends State<MyApp> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     if (prefs.containsKey('students')) {
+      final String studentString = await prefs.getString('students').toString();
+      final List<Student> students = Student.decode(studentString);
+      // count the number of students in the list students
+      var studentCount = students.length;
+      if (studentCount > 10) {
+        //print("more than one student");
+        return "invalid";
+      }
+      if (!prefs.containsKey('username')) {
+        return "invalid";
+      }
       //print("get values from  shared preferences...");
-      var username = AppConfig.globalpmn;
+      var username = prefs.getString('username').toString();
+      //print("username=" + username);
       var appConfig = AppConfig();
       var logginStateValue = appConfig.checkLogin(username: username);
       return logginStateValue;
@@ -284,6 +296,7 @@ class _MyAppState extends State<MyApp> {
                 if (snapshot.data == "valid") {
                   return const HomeScreen();
                 } else if (snapshot.data == "invalid") {
+                  AppConfig.logout();
                   return const LoginScreen();
                 } else if (snapshot.data == "serverNotReachable") {
                   return NoWebsiteWidget();

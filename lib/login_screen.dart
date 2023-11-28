@@ -39,6 +39,13 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> sendOtp() async {
+    // Validate the form
+    if (!_formKey.currentState!.validate()) {
+      _isOtpSent = false;
+      _isLoading = false;
+      EasyLoading.showError('Please enter mobile number or email ID');
+      return;
+    }
     FocusScope.of(context).unfocus();
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var deviceToken = prefs.getString('deviceToken');
@@ -61,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
         EasyLoading.showInfo('OTP sent on mobile and email',
             dismissOnTap: true,
             duration: const Duration(
-                seconds: 10)); // Inform the user OTP has been sent
+                seconds: 5)); // Inform the user OTP has been sent
         setState(() {
           _otp = (data['otp']).toString();
           _isOtpSent = true;
@@ -92,6 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
     FocusScope.of(context).unfocus();
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var deviceToken = prefs.getString('deviceToken');
+    var username = _usernameController.text;
     setState(() => _isLoading = true);
     var response = await http.post(
       Uri.parse('https://www.cskm.com/schoolexpert/cskmparents/checklogin.php'),
@@ -110,6 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // store the countData in shared preferences
       SharedPreferences prefs = await SharedPreferences.getInstance();
       prefs.setInt('totalStudents', countData);
+      prefs.setString('username', username);
       List<Student> students = [];
       // loop through 1 to countData
       for (int i = 0; i < countData; i++) {
@@ -204,6 +213,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     enabled: !_isOtpSent,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter mobile number or email ID';
+                      }
+                      // Add any additional validation logic here if needed
+                      return null;
+                    },
                   ),
                   // Added text field for OTP input
                   if (_isOtpSent)

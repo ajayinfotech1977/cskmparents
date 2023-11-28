@@ -17,10 +17,10 @@ class ApiService {
       // sync data from server
       await dbHelper.syncDataToMessages();
 
-      dbHelper.close();
-      print("syncMessages completed");
+      //dbHelper.close();
+      //print("syncMessages completed");
     } catch (Exception) {
-      print("syncMessages Exception: $Exception");
+      //print("syncMessages Exception: $Exception");
     }
   }
 
@@ -90,22 +90,28 @@ class ApiService {
   }
 
   Future<List<MessageModel>> getMessages(String fromNo, String toNo) async {
-    final dbHelper = DatabaseHelper();
-    // initialize database
-    await dbHelper.initDatabase();
-    // fetch data from database
-    final data = await dbHelper.getDataFromMessages(fromNo, toNo);
-    // print("fromNo= $fromNo, toNo= $toNo");
-    // print(data);
-    // convert data to List<MessageModel>
-    List<MessageModel> messages = List.generate(data.length, (i) {
-      return MessageModel.fromMap(data[i]);
-    });
-    // close database connection
-    dbHelper.close();
+    try {
+      final dbHelper = DatabaseHelper();
+      // initialize database
+      await dbHelper.initDatabase();
+      // fetch data from database
+      final data = await dbHelper.getDataFromMessages(fromNo, toNo);
+      // print("fromNo= $fromNo, toNo= $toNo");
+      // print(data);
+      // convert data to List<MessageModel>
+      List<MessageModel> messages = List.generate(data.length, (i) {
+        return MessageModel.fromMap(data[i]);
+      });
+
+      // close database connection
+      //dbHelper.close();
+      return messages;
+    } catch (e) {
+      print("getMessages Exception: $e");
+      return [];
+    }
 
     //print(messages);
-    return messages;
   }
 
   // function to update the status of message to read for the userno and adm_no
@@ -116,6 +122,6 @@ class ApiService {
     // update the status of message to read for the userno and adm_no
     await dbHelper.updateMessageStatusToR(adm_no, userno);
     // close database connection
-    dbHelper.close();
+    //dbHelper.close();
   }
 }
