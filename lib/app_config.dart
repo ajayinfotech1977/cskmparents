@@ -33,6 +33,7 @@ class AppConfig {
   static bool isNewMessage = false;
   static bool isChatScreenActive = false;
   static bool isNotificationScreenActive = false;
+  static bool isNewNotification = false;
 
   static BoxDecoration boxDecoration() {
     return const BoxDecoration(
@@ -152,6 +153,10 @@ class AppConfig {
                 admNo: admNo,
                 loginBy: loginBy);
             students.add(st);
+          } else if (loginStatus == 'invalid') {
+            // Login failed
+            AppConfig.logout();
+            return Future.value("invalid");
           }
         }
 
@@ -178,39 +183,6 @@ class AppConfig {
       }
     } catch (Exception) {
       return Future.value("serverNotReachable");
-    }
-  }
-
-  Future<String> getUserNo() async {
-    SharedPreferences? prefs = await SharedPreferences.getInstance();
-    if (prefs.containsKey('userNo')) {
-      var userNo = prefs.getInt('userNo').toString();
-      //print("From getUserNo userNo= $userNo");
-      return userNo;
-    } else {
-      return "";
-    }
-  }
-
-  Future<bool> isOthersPendingTasksAllowed() async {
-    SharedPreferences? prefs = await SharedPreferences.getInstance();
-    if (prefs.containsKey('othersPendingTasks')) {
-      bool othersPendingTasks = prefs.getBool('othersPendingTasks') as bool;
-      //print("From getUserNo userNo= $userNo");
-      return Future.value(othersPendingTasks);
-    } else {
-      return Future.value(false);
-    }
-  }
-
-  Future<bool> isClassTeacher() async {
-    SharedPreferences? prefs = await SharedPreferences.getInstance();
-    if (prefs.containsKey('classTeacher')) {
-      bool classTeacher = prefs.getBool('classTeacher') as bool;
-      //print("From getUserNo userNo= $userNo");
-      return Future.value(classTeacher);
-    } else {
-      return Future.value(false);
     }
   }
 
@@ -281,25 +253,11 @@ class AppConfig {
         // set globalLastSelected_adm_no in shared preferences
         prefs.setString('globalLastSelected_adm_no', globalLastSelected_adm_no);
       } else {
+        var studentFound = false;
         // loop through all students and find the student with adm_no = globalLastSelected_adm_no
         for (int i = 0; i < students.length; i++) {
           if (students[i].adm_no == globalLastSelected_adm_no) {
-            //print("found adm_no at index $i");
-            //print("students[i].adm_no = ${students[i].adm_no}");
-            //print("students[i].st_name = ${students[i].st_name}");
-            //print("students[i].st_class = ${students[i].st_class}");
-            //print("students[i].st_section = ${students[i].st_section}");
-            //print("students[i].stImageName = ${students[i].stImageName}");
-            //print("students[i].pemail = ${students[i].pemail}");
-            //print("students[i].pmn = ${students[i].pmn}");
-            //print("students[i].admNoP = ${students[i].admNoP}");
-            //print("students[i].fyP = ${students[i].fyP}");
-            //print("students[i].loginByP = ${students[i].loginByP}");
-            //print("students[i].notificationCount = ${students[i].notificationCount}");
-            //print("students[i].fy = ${students[i].fy}");
-            //print("students[i].admNo = ${students[i].admNo}");
-            //print("students[i].loginBy = ${students[i].loginBy}");
-            //print("students[i].sno = ${students[i].sno}");
+            studentFound = true;
             globaladm_no = students[i].adm_no;
             globalst_name = students[i].st_name;
             globalst_class = students[i].st_class;
@@ -318,6 +276,31 @@ class AppConfig {
             globalsno = students[i].sno;
             break;
           }
+        }
+        // if student not found then set globalLastSelected_adm_no to globaladm_no
+        if (!studentFound) {
+          globaladm_no = students[0].adm_no;
+          globalst_name = students[0].st_name;
+          globalst_class = students[0].st_class;
+          globalst_section = students[0].st_section;
+          globalstImageName = students[0].stImageName;
+          globalpemail = students[0].pemail;
+          globalpmn = students[0].pmn;
+          globaladmNoP = students[0].admNoP;
+          globalfyP = students[0].fyP;
+          globalloginByP = students[0].loginByP;
+          globalnotificationCount = students[0].notificationCount;
+          globalmessageCount = students[0].messagesCount;
+          globalfy = students[0].fy;
+          globaladmNo = students[0].admNo;
+          globalloginBy = students[0].loginBy;
+          globalsno = students[0].sno;
+
+          // if globalLastSelected_adm_no is empty then set it to globaladm_no
+          globalLastSelected_adm_no = globaladm_no;
+          // set globalLastSelected_adm_no in shared preferences
+          prefs.setString(
+              'globalLastSelected_adm_no', globalLastSelected_adm_no);
         }
       }
     }

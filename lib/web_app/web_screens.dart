@@ -47,7 +47,7 @@ class ViewReportCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return WebViewApp(
       title: 'Report Card',
-      url: 'https://www.cskm.com/schoolexpert/myRC.asp',
+      url: 'https://www.cskm.com/schoolexpert/myRC.asp?f=app',
       backButton: true,
     );
   }

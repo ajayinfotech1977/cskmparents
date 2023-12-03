@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cskmparents/database/database_helper.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class Notification {
   final String date;
@@ -47,20 +48,20 @@ class NotificationScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _NotificationScreenState createState() => _NotificationScreenState();
+  NotificationScreenState createState() => NotificationScreenState();
 }
 
-class _NotificationScreenState extends State<NotificationScreen> {
+class NotificationScreenState extends State<NotificationScreen> {
   List<Notification> _notifications = [];
   bool fetched = false;
-  ValueNotifier<int> notificationCountNotifier =
-      ValueNotifier<int>(AppConfig.globalnotificationCount);
 
   @override
   void initState() {
     super.initState();
     AppConfig.isNotificationScreenActive = true;
     _loadNotifications();
+
+    //notificationPolling();
 
     // TODO: Set up foreground message handler
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
@@ -69,9 +70,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
         //print(data);
         if (data.containsKey('notificationType')) {
           String dataValue = data['notificationType'];
-          if (dataValue == 'Notification' &&
-              AppConfig.isNotificationScreenActive) {
+          if (dataValue == 'Notification') {
             _loadNotifications();
+            final player = AudioPlayer();
+            //play sound stored in assets/sound/messagerecieved.mp3
+            await player.play(AssetSource('sound/messagerecieved.mp3'),
+                volume: 1);
           }
           // Process the data as needed
           //print('Received data from PHP: $dataValue');
@@ -83,7 +87,23 @@ class _NotificationScreenState extends State<NotificationScreen> {
   @override
   void dispose() {
     AppConfig.isNotificationScreenActive = false;
+
     super.dispose();
+  }
+
+  void notificationPolling() async {
+    // Delay execution for 30 seconds
+    await Future.delayed(Duration(seconds: 30));
+
+    while (AppConfig.isNotificationScreenActive) {
+      print("notificationPolling called");
+      if (AppConfig.isNewNotification) {
+        _loadNotifications();
+        AppConfig.isNewNotification = false;
+        // Delay execution for the next 30 seconds
+      }
+      await Future.delayed(Duration(seconds: 3));
+    }
   }
 
   Future<void> _loadNotifications() async {
@@ -97,26 +117,24 @@ class _NotificationScreenState extends State<NotificationScreen> {
     //await dbHelper.deleteAllDataFromParentsNotifications();
     // sync data from server
     await dbHelper.syncDataToParentsNotifications();
-    final data = await dbHelper.getDataFromParentsNotifications();
 
-    // convert data to List<Notification>
-    _notifications = List.generate(data.length, (i) {
-      return Notification.fromMap(data[i]);
-    });
-    fetched = true;
     // close the database connection
     if (mounted) {
+      final data = await dbHelper.getDataFromParentsNotifications();
+
+      // convert data to List<Notification>
+      _notifications = List.generate(data.length, (i) {
+        return Notification.fromMap(data[i]);
+      });
+      fetched = true;
       setState(() {
         widget.stream.add(CustomData(count: 0, form: 'notification'));
-        notificationCountNotifier.value = 0;
       });
+      // call updateNotificationStatusToR() method to update notification status to R
+
+      await dbHelper.updateNotificationStatusToR();
     }
-
-    // call updateNotificationStatusToR() method to update notification status to R
-
-    await dbHelper.updateNotificationStatusToR();
-
-    dbHelper.close();
+    //dbHelper.close();
   }
 
   List<InlineSpan> parseText(String text) {

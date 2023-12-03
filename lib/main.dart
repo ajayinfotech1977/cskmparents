@@ -84,11 +84,17 @@ void initializeFirebase() async {
     String title = message.notification?.title as String;
     String msg = message.notification?.body as String;
     var data = message.data;
-    String dataValue = '';
     if (data.isNotEmpty) {
-      //print(data);
       if (data.containsKey('notificationType')) {
-        dataValue = data['notificationType'];
+        String dataValue = data['notificationType'];
+        if (dataValue == 'Notification' &&
+            AppConfig.isNotificationScreenActive) {
+          AppConfig.isNewNotification = true;
+        } else if (dataValue == 'Message' && AppConfig.isChatScreenActive) {
+          AppConfig.isNewMessage = true;
+        } else {
+          showNotification(title, msg);
+        }
       }
     }
 
@@ -102,9 +108,8 @@ void initializeFirebase() async {
     //     print('Received data from PHP: $dataValue');
     //   }
     // }
-    if (!(AppConfig.isChatScreenActive && dataValue == 'Message')) {
-      showNotification(title, msg);
-    }
+    // print('isChatScreenActive=${AppConfig.isChatScreenActive}');
+    // print('isNotificationScreenActive=${AppConfig.isNotificationScreenActive}');
 
     // if (kDebugMode) {
     //   print('Handling a foreground message: ${message.messageId}');

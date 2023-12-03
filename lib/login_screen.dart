@@ -34,6 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void loginFailed() {
+    AppConfig.logout();
     EasyLoading.showError('Login Failed');
     setState(() => _isLoading = false);
   }
@@ -114,12 +115,19 @@ class _LoginScreenState extends State<LoginScreen> {
       //print(response.body);
       var data = jsonDecode(response.body);
       int countData = data.length;
+      if (countData == 0) {
+        // Login failed
+        loginFailed();
+        // exit the function
+        return;
+      }
       //print("countData is $countData");
       // store the countData in shared preferences
       SharedPreferences prefs = await SharedPreferences.getInstance();
       prefs.setInt('totalStudents', countData);
       prefs.setString('username', username);
       List<Student> students = [];
+
       // loop through 1 to countData
       for (int i = 0; i < countData; i++) {
         var dataI = data[i];
@@ -161,6 +169,11 @@ class _LoginScreenState extends State<LoginScreen> {
               admNo: admNo,
               loginBy: loginBy);
           students.add(st);
+        } else if (loginStatus == 'invalid') {
+          // Login failed
+          loginFailed();
+          // exit the function
+          return;
         }
       }
 

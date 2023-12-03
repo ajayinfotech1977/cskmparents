@@ -21,7 +21,7 @@ Future<List<Album>> fetchAlbums() async {
     return Album.fromMap(data[i]);
   });
 
-  dbHelper.close();
+  //dbHelper.close();
 
   return _albums;
 }
