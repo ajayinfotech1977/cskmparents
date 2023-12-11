@@ -1,9 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:cskmparents/database/database_helper.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class AppConfig {
   /*below is a secretkey encrypted key which will go with each post 
@@ -94,6 +98,17 @@ class AppConfig {
   }) async {
     //print("sending post request to server");
     try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      // get device details
+      String? deviceToken = await prefs.getString('deviceToken');
+      String? make = await prefs.getString('make');
+      String? model = await prefs.getString('model');
+      String? appversion = await prefs.getString('appversion');
+      String? appbuildNumber = await prefs.getString('appbuildNumber');
+      //print("make = $make");
+      //print("model = $model");
+      //print("appversion = $appversion");
+      //print("appbuildNumber = $appbuildNumber");
       var response = await http.post(
         Uri.parse(
             'https://www.cskm.com/schoolexpert/cskmparents/checkLogin.php'),
@@ -101,6 +116,12 @@ class AppConfig {
           'username': username,
           'otp': 'yaja.heNs~hTraHdDis',
           'encrypted': 'No',
+          'make': make,
+          'model': model,
+          'appversion': appversion,
+          'appbuildNumber': appbuildNumber,
+          'loginType': 'auto',
+          'deviceToken': deviceToken,
         },
       );
       //print("response = ${response.body}");
@@ -110,7 +131,7 @@ class AppConfig {
         //print("countData is $countData");
         // store the countData in shared preferences
         SharedPreferences prefs = await SharedPreferences.getInstance();
-        prefs.setInt('totalStudents', countData);
+        await prefs.setInt('totalStudents', countData);
         List<Student> students = [];
         // loop through 1 to countData
         for (int i = 0; i < countData; i++) {
@@ -155,7 +176,6 @@ class AppConfig {
             students.add(st);
           } else if (loginStatus == 'invalid') {
             // Login failed
-            AppConfig.logout();
             return Future.value("invalid");
           }
         }
@@ -164,7 +184,7 @@ class AppConfig {
         // Encode and store data in SharedPreferences
         final String encodedData = Student.encode(students);
         // store the json in shared preferences
-        prefs.setString(key, encodedData);
+        await prefs.setString(key, encodedData);
 
         await AppConfig.setGlobalVariables();
 
@@ -189,23 +209,36 @@ class AppConfig {
   static Future<void> logout() async {
     SharedPreferences? prefs = await SharedPreferences.getInstance();
 
-    await http.post(
-      Uri.parse('https://www.cskm.com/schoolexpert/cskmparents/logout.php'),
-      body: {
-        'username': AppConfig.globalpmn,
-        'otp': 'yaja.heNs~hTraHdDis',
-        'deviceToken': prefs.getString('deviceToken'),
-        'secretKey': secreetKey,
-      },
-    );
+    if (await prefs.containsKey('username')) {
+      await http.post(
+        Uri.parse('https://www.cskm.com/schoolexpert/cskmparents/logout.php'),
+        body: {
+          'username': prefs.getString('username'),
+          'otp': 'yaja.heNs~hTraHdDis',
+          'deviceToken': prefs.getString('deviceToken'),
+          'secretKey': secreetKey,
+          'adm_no': globaladm_no,
+        },
+      );
+    }
     //print(response.body);
 
     // get deviceToken from shared preferences
-    String? deviceToken = prefs.getString('deviceToken');
+    String? deviceToken = await prefs.getString('deviceToken');
+    String? make = await prefs.getString('make');
+    String? model = await prefs.getString('model');
+    String? appversion = await prefs.getString('appversion');
+    String? appbuildNumber = await prefs.getString('appbuildNumber');
+
     // clear all prefs except deviceToken
-    prefs.clear();
+    await prefs.clear();
     // set deviceToken back to shared preferences
-    prefs.setString('deviceToken', deviceToken!);
+    await prefs.setString('deviceToken', deviceToken!);
+    // set device details back to shared preferences
+    await prefs.setString('make', make!);
+    await prefs.setString('model', model!);
+    await prefs.setString('appversion', appversion!);
+    await prefs.setString('appbuildNumber', appbuildNumber!);
 
     // delete database by calling removeDatabase() in database_helper.dart
     await DatabaseHelper().removeDatabase();
@@ -225,11 +258,11 @@ class AppConfig {
     if (prefs.containsKey('students')) {
       // fetch the globalLastSelected_adm_no from shared preferences
       globalLastSelected_adm_no =
-          prefs.getString('globalLastSelected_adm_no').toString();
+          await prefs.getString('globalLastSelected_adm_no').toString();
       //print("globalLastSelected_adm_no = $globalLastSelected_adm_no");
       // Fetch and decode data
       final String studentString = await prefs.getString('students').toString();
-      final List<Student> students = Student.decode(studentString);
+      final List<Student> students = await Student.decode(studentString);
       if (!prefs.containsKey('globalLastSelected_adm_no')) {
         globaladm_no = students[0].adm_no;
         globalst_name = students[0].st_name;
@@ -251,7 +284,8 @@ class AppConfig {
         // if globalLastSelected_adm_no is empty then set it to globaladm_no
         globalLastSelected_adm_no = globaladm_no;
         // set globalLastSelected_adm_no in shared preferences
-        prefs.setString('globalLastSelected_adm_no', globalLastSelected_adm_no);
+        await prefs.setString(
+            'globalLastSelected_adm_no', globalLastSelected_adm_no);
       } else {
         var studentFound = false;
         // loop through all students and find the student with adm_no = globalLastSelected_adm_no
@@ -299,7 +333,7 @@ class AppConfig {
           // if globalLastSelected_adm_no is empty then set it to globaladm_no
           globalLastSelected_adm_no = globaladm_no;
           // set globalLastSelected_adm_no in shared preferences
-          prefs.setString(
+          await prefs.setString(
               'globalLastSelected_adm_no', globalLastSelected_adm_no);
         }
       }
@@ -311,7 +345,7 @@ class AppConfig {
     if (prefs.containsKey('students')) {
       // Fetch and decode data
       final String studentString = await prefs.getString('students').toString();
-      final List<Student> students = Student.decode(studentString);
+      final List<Student> students = await Student.decode(studentString);
 
       // search for adm_no in students list matching with adm_no
       for (int i = 0; i < students.length; i++) {
@@ -350,12 +384,54 @@ class AppConfig {
           globalsno = students[i].sno;
           globalLastSelected_adm_no = adm_no;
           // set globalLastSelected_adm_no in shared preferences
-          prefs.setString(
+          await prefs.setString(
               'globalLastSelected_adm_no', globalLastSelected_adm_no);
           break;
         }
       }
     }
+  }
+
+  Future<Map<String, String>> getDeviceDetails() async {
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    String appVersion = packageInfo.version;
+    String buildNumber = packageInfo.buildNumber;
+    if (Platform.isAndroid) {
+      AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+      return {
+        'make': androidInfo.manufacturer,
+        'model': androidInfo.model,
+        'appversion': appVersion,
+        'appbuildNumber': buildNumber,
+      };
+    } else if (Platform.isIOS) {
+      IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+      return {
+        'make': 'Apple',
+        'model': iosInfo.model,
+        'appversion': appVersion,
+        'appbuildNumber': buildNumber,
+      };
+    }
+    return {
+      'make': 'Unknown',
+      'model': 'Unknown',
+      'appversion': appVersion,
+      'appbuildNumber': buildNumber,
+    };
+  }
+
+  Future<void> initDeviceInfo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    Map<String, String> deviceDetails = await AppConfig().getDeviceDetails();
+    if (!prefs.containsKey('make') || prefs.getString('make') == null) {
+      // store device information also
+      await prefs.setString('make', deviceDetails['make']!);
+      await prefs.setString('model', deviceDetails['model']!);
+    }
+    await prefs.setString('appversion', deviceDetails['appversion']!);
+    await prefs.setString('appbuildNumber', deviceDetails['appbuildNumber']!);
   }
 }
 

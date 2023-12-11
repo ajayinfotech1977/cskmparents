@@ -112,6 +112,10 @@ class _HomeScreenButtonsState extends State<HomeScreenButtons> {
     Navigator.pushNamed(context, '/photogallery');
   }
 
+  void openMobileListScreen(context) {
+    Navigator.pushNamed(context, '/mobilelistscreen');
+  }
+
   @override
   Widget build(BuildContext context) {
     return GridView.count(
@@ -179,6 +183,11 @@ class _HomeScreenButtonsState extends State<HomeScreenButtons> {
           buttonText: 'Photo Gallery',
           icon: Icons.photo_library,
           onTap: openPhotoGallery,
+        ),
+        ButtonWidget(
+          buttonText: 'Logout From Other Devices',
+          icon: Icons.logout,
+          onTap: openMobileListScreen,
         ),
 
         // show schoolexpert page to all
@@ -295,8 +304,8 @@ class ButtonWidget extends StatelessWidget {
                         ).createShader(Rect.fromLTWH(0.0, 0.0, 200.0, 70.0)),
                     ),
                     textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    //maxLines: 2,
+                    //overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],

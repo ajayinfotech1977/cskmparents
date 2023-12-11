@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:cskmparents/messaging/api_service.dart';
+import 'package:cskmparents/mobile_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -76,7 +78,8 @@ void initializeFirebase() async {
   // It requests a registration token for sending messages to users from your App server or other trusted server environment.
   String? token = await messaging.getToken() as String;
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  prefs.setString('deviceToken', token);
+  await prefs.setString('deviceToken', token);
+
   //print('Registration Token=$token');
 
   // TODO: Set up foreground message handler
@@ -94,6 +97,9 @@ void initializeFirebase() async {
           AppConfig.isNewMessage = true;
         } else {
           showNotification(title, msg);
+          if (dataValue == 'Message') {
+            ApiService().syncMessages();
+          }
         }
       }
     }
@@ -251,21 +257,22 @@ class _MyAppState extends State<MyApp> {
 
     /******Auto update calling complete***************/
     SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    if (prefs.containsKey('students')) {
+    //print("is username there: " + prefs.containsKey('username').toString());
+    if (!await prefs.containsKey('username')) {
+      return "invalid";
+    }
+    if (await prefs.containsKey('students')) {
       final String studentString = await prefs.getString('students').toString();
       final List<Student> students = Student.decode(studentString);
       // count the number of students in the list students
       var studentCount = students.length;
-      if (studentCount > 10) {
+      if (studentCount > 5) {
         //print("more than one student");
         return "invalid";
       }
-      if (!prefs.containsKey('username')) {
-        return "invalid";
-      }
+
       //print("get values from  shared preferences...");
-      var username = prefs.getString('username').toString();
+      var username = await prefs.getString('username');
       //print("username=" + username);
       var appConfig = AppConfig();
       var logginStateValue = appConfig.checkLogin(username: username);
@@ -278,11 +285,15 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    AppConfig().initDeviceInfo();
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(
+        useMaterial3: false,
+      ),
       title: 'CSKM Public School Parents App',
       home: StreamBuilder(
         stream: Connectivity().onConnectivityChanged,
@@ -330,6 +341,7 @@ class _MyAppState extends State<MyApp> {
         '/feesummary': (context) => ViewFeeSummary(),
         '/feeslips': (context) => ViewFeeSlips(),
         '/photogallery': (context) => PhotoGalleryPage(),
+        '/mobilelistscreen': (context) => MobileListScreen(),
       },
       builder: EasyLoading.init(),
     );

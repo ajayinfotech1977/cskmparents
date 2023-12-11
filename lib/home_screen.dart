@@ -172,6 +172,7 @@ class _StudentsListState extends State<StudentsList> {
         currentPage = _pageController.page!.round();
       });
     });
+    AppConfig().initDeviceInfo();
   }
 
   @override
@@ -322,24 +323,25 @@ class _StudentsListState extends State<StudentsList> {
             },
           ),
         ),
-        SizedBox(height: 20),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(
-            students.length,
-            (index) {
-              return Container(
-                width: 10,
-                height: 10,
-                margin: EdgeInsets.symmetric(horizontal: 4),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: index == currentPage ? Colors.blue : Colors.grey,
-                ),
-              );
-            },
+        if (students.length > 1) SizedBox(height: 10),
+        if (students.length > 1)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              students.length,
+              (index) {
+                return Container(
+                  width: 10,
+                  height: 10,
+                  margin: EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: index == currentPage ? Colors.blue : Colors.grey,
+                  ),
+                );
+              },
+            ),
           ),
-        ),
       ],
     );
   }

@@ -31,10 +31,11 @@ class _LoginScreenState extends State<LoginScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _usernameFocus.requestFocus();
     });
+    AppConfig().initDeviceInfo();
   }
 
   void loginFailed() {
-    AppConfig.logout();
+    //AppConfig.logout();
     EasyLoading.showError('Login Failed');
     setState(() => _isLoading = false);
   }
@@ -99,7 +100,17 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> login() async {
     FocusScope.of(context).unfocus();
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    var deviceToken = prefs.getString('deviceToken');
+    String? deviceToken = await prefs.getString('deviceToken');
+    String? make = await prefs.getString('make');
+    String? model = await prefs.getString('model');
+    String? appversion = await prefs.getString('appversion');
+    String? appbuildNumber = await prefs.getString('appbuildNumber');
+    print('deviceToken is $deviceToken');
+    print('make is $make');
+    print('model is $model');
+    print('appversion is $appversion');
+    print('appbuildNumber is $appbuildNumber');
+
     var username = _usernameController.text;
     setState(() => _isLoading = true);
     var response = await http.post(
@@ -108,6 +119,11 @@ class _LoginScreenState extends State<LoginScreen> {
         'username': _usernameController.text,
         'deviceToken': deviceToken,
         'otp': 'yaja.heNs~hTraHdDis',
+        'make': make,
+        'model': model,
+        'appversion': appversion,
+        'appbuildNumber': appbuildNumber,
+        'loginType': 'manual',
       },
     );
 
@@ -124,8 +140,8 @@ class _LoginScreenState extends State<LoginScreen> {
       //print("countData is $countData");
       // store the countData in shared preferences
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setInt('totalStudents', countData);
-      prefs.setString('username', username);
+      await prefs.setInt('totalStudents', countData);
+      await prefs.setString('username', username);
       List<Student> students = [];
 
       // loop through 1 to countData
@@ -171,6 +187,7 @@ class _LoginScreenState extends State<LoginScreen> {
           students.add(st);
         } else if (loginStatus == 'invalid') {
           // Login failed
+          //AppConfig.logout();
           loginFailed();
           // exit the function
           return;
@@ -181,7 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // Encode and store data in SharedPreferences
       final String encodedData = Student.encode(students);
       // store the json in shared preferences
-      prefs.setString(key, encodedData);
+      await prefs.setString(key, encodedData);
 
       await AppConfig.setGlobalVariables();
 
