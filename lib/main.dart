@@ -18,6 +18,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cskmparents/photogallery_screen.dart';
 import 'dart:io';
 import 'package:upgrader/upgrader.dart';
+import 'package:restart_app/restart_app.dart';
 
 // TODO: Add stream controller
 import 'package:rxdart/rxdart.dart';
@@ -228,6 +229,11 @@ class _MyAppState extends State<MyApp> {
           //showSnack(e.toString());
           return AppUpdateResult.inAppUpdateFailed;
         });
+        try {
+          Restart.restartApp();
+        } catch (e) {
+          //print(e);
+        }
       }
       //});
     }).catchError((e) {
