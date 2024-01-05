@@ -348,6 +348,7 @@ class _MyAppState extends State<MyApp> {
         '/feeslips': (context) => ViewFeeSlips(),
         '/photogallery': (context) => PhotoGalleryPage(),
         '/mobilelistscreen': (context) => MobileListScreen(),
+        '/viewFeePayment': (context) => ViewFeePayment(),
       },
       builder: EasyLoading.init(),
     );

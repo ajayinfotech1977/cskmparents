@@ -4,6 +4,7 @@ import 'package:cskmparents/messaging/message_tabbed_screen.dart';
 import 'package:cskmparents/notifications_sreen.dart';
 import 'package:flutter/material.dart';
 import 'package:cskmparents/custom_data_stream.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 StreamController<CustomData> streamController =
     StreamController<CustomData>.broadcast();
@@ -108,6 +109,18 @@ class _HomeScreenButtonsState extends State<HomeScreenButtons> {
     Navigator.pushNamed(context, '/feeslips');
   }
 
+  void openFeePayment(context) async {
+    //Navigator.pushNamed(context, '/viewFeePayment');
+    // navigate to url https://www.cskm.com/pay-fees-details-v3.0.php?f=app on the default browser
+    // using url_launcher package
+    // https://pub.dev/packages/url_launcher
+    var fy = await AppConfig.globalfy;
+    var adm_no = await AppConfig.globaladm_no;
+    var url =
+        'https://www.cskm.com/pay-fees-details-v3.0.php?f=app&fy=$fy&adm_no=$adm_no';
+    await launchUrl(Uri.parse(url));
+  }
+
   void openPhotoGallery(context) {
     Navigator.pushNamed(context, '/photogallery');
   }
@@ -178,6 +191,11 @@ class _HomeScreenButtonsState extends State<HomeScreenButtons> {
           buttonText: 'Fee Slips',
           icon: Icons.receipt,
           onTap: openFeeSlips,
+        ),
+        ButtonWidget(
+          buttonText: 'Fee Payment',
+          icon: Icons.payment,
+          onTap: openFeePayment,
         ),
         ButtonWidget(
           buttonText: 'Photo Gallery',

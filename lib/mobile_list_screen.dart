@@ -39,7 +39,7 @@ class _MobileListScreenState extends State<MobileListScreen> {
       String? username = await prefs.getString('username');
       final response = await http.post(
           Uri.parse(
-              'https://www.cskm.com/schoolexpert/cskmparents/devicesLoggedIn.php?username=$username'),
+              'https://www.cskm.com/schoolexpert/cskmparents/devicesLoggedIn.php'),
           body: {
             'username': username,
             'otp': 'yaja.heNs~hTraHdDis',

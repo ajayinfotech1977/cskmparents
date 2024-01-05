@@ -126,6 +126,10 @@ class _WebViewAppState extends State<WebViewApp> with TickerProviderStateMixin {
             openFallbackUrl(request.url);
             //openIntentUrl(request.url);
             return NavigationDecision.prevent;
+          } else if (request.url.contains("pay-fees")) {
+            // open intent url in external browser
+            launchUrl(Uri.parse(request.url));
+            return NavigationDecision.prevent;
           } else {
             return NavigationDecision.navigate;
           }

@@ -131,6 +131,17 @@ class ViewFeeSlips extends StatelessWidget {
   }
 }
 
+// view fee payment
+class ViewFeePayment extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return WebViewApp(
+      title: 'Fee Payment',
+      url: 'https://www.cskm.com/pay-fees-details-v3.0.php?f=app',
+      backButton: false,
+    );
+  }
+}
 // view photo gallery
 // class ViewPhotoGallery extends StatelessWidget {
 //   @override
